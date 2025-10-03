@@ -1,0 +1,620 @@
+/* ========================================
+   POTTERY RIB CUSTOMIZER - STYLES
+   ======================================== */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+/* ========================================
+   CSS VARIABLES (Color Scheme)
+   ======================================== */
+:root {
+    --primary-red: #d63447;
+    --primary-blue: #0066cc;
+    --primary-yellow: #f4c430;
+    --bright-red: #e85d75;
+    --bright-blue: #3399ff;
+    --bright-yellow: #f9d96b;
+}
+
+/* ========================================
+   GENERAL BODY STYLES
+   ======================================== */
+body {
+    font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--bright-yellow) 0%, var(--primary-yellow) 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ========================================
+   HEADER SECTION
+   ======================================== */
+.header {
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--bright-red) 100%);
+    color: white;
+    padding: 2rem 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    margin-bottom: 2rem;
+}
+
+.header h1 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+/* ========================================
+   CONTROL PANEL (Left Column)
+   ======================================== */
+.control-panel {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    height: fit-content;
+    border: 4px solid var(--primary-blue);
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+}
+
+/* ========================================
+   VIEWER CONTAINER (Right Column)
+   ======================================== */
+.viewer-container {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    border: 4px solid var(--primary-red);
+}
+
+/* Canvas container for 3D rendering */
+#canvas-container {
+    width: 100%;
+    height: 500px;
+    border-radius: 15px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%);
+    position: relative;
+}
+
+/* ========================================
+   VIEW THUMBNAILS
+   ======================================== */
+.view-thumbnails {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.view-thumbnail {
+    aspect-ratio: 1;
+    border: 3px solid var(--primary-blue);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.view-thumbnail:hover {
+    border-color: var(--primary-red);
+    transform: scale(1.05);
+}
+
+.view-thumbnail.active {
+    border-color: var(--primary-red);
+    box-shadow: 0 0 15px rgba(214, 52, 71, 0.5);
+}
+
+.view-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.25rem;
+    text-align: center;
+}
+
+/* ========================================
+   LOADING OVERLAY
+   ======================================== */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.loading-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Spinning loader animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.spinner {
+    border: 4px solid var(--bright-yellow);
+    border-top: 4px solid var(--primary-red);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+/* ========================================
+   CONTROL GROUP SECTIONS
+   ======================================== */
+.control-group {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.control-group label {
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Section headers for different control categories */
+.section-header {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--primary-red);
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid var(--bright-yellow);
+}
+
+/* ========================================
+   FORM CONTROLS
+   ======================================== */
+.form-range {
+    accent-color: var(--primary-red);
+}
+
+.form-select {
+    border-radius: 10px;
+    border: 3px solid var(--primary-blue);
+    padding: 0.6rem;
+    font-weight: 600;
+}
+
+.form-select:focus {
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 0.2rem rgba(214, 52, 71, 0.25);
+}
+
+/* ========================================
+   BUTTONS (Toy-like styling with bounce)
+   ======================================== */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--bright-blue) 100%);
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 15px rgba(0, 102, 204, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-primary:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 102, 204, 0.6);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 10px rgba(0, 102, 204, 0.3);
+}
+
+.btn-outline-secondary {
+    border: 3px solid var(--primary-red);
+    color: var(--primary-red);
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(214, 52, 71, 0.2);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--primary-red);
+    color: white;
+    transform: translateY(-4px);
+    box-shadow: 0 6px 15px rgba(214, 52, 71, 0.4);
+}
+
+.btn-outline-secondary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(214, 52, 71, 0.2);
+}
+
+.btn-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+}
+
+/* ========================================
+   VALUE DISPLAYS (Yellow badges)
+   ======================================== */
+.value-display {
+    display: inline-block;
+    background: var(--bright-yellow);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--primary-blue);
+    font-weight: 700;
+    border: 2px solid var(--primary-blue);
+}
+
+/* ========================================
+   WARNING MESSAGES
+   ======================================== */
+.warning-text {
+    color: #dc3545;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-top: 0.25rem;
+    display: none;
+}
+
+.warning-text.show {
+    display: block;
+}
+
+/* ========================================
+   MODAL DIALOGS
+   ======================================== */
+.modal-custom {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-custom.show {
+    display: flex;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    border: 4px solid var(--primary-red);
+}
+
+/* Drawing canvas for custom shapes */
+#drawing-canvas {
+    border: 4px solid var(--primary-blue);
+    border-radius: 15px;
+    cursor: crosshair;
+    display: block;
+    margin: 1rem auto;
+    background: white;
+}
+
+/* ========================================
+   PRESET CARDS
+   ======================================== */
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.preset-card {
+    border: 3px solid var(--primary-blue);
+    border-radius: 15px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    background: white;
+}
+
+.preset-card:hover {
+    border-color: var(--primary-red);
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(214, 52, 71, 0.3);
+}
+
+.preset-card.active {
+    border-color: var(--primary-red);
+    background: #fff5f5;
+}
+
+.preset-name {
+    font-weight: 700;
+    color: var(--primary-blue);
+    font-size: 0.9rem;
+}
+
+.preset-desc {
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+/* ========================================
+   INFO TEXT
+   ======================================== */
+.info-text {
+    font-size: 0.85rem;
+    color: var(--primary-blue);
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+/* ========================================
+   STATISTICS PANEL
+   ======================================== */
+.stats-panel {
+    background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%);
+    border-radius: 15px;
+    padding: 1rem;
+    margin-top: 1rem;
+    border: 3px solid var(--primary-blue);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.stat-item {
+    background: white;
+    padding: 0.75rem;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--primary-red);
+}
+
+/* ========================================
+   CANVAS INSTRUCTIONS OVERLAY
+   ======================================== */
+.canvas-instructions {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    border: 2px solid var(--primary-blue);
+    pointer-events: none;
+}
+
+/* Grid overlay for canvas */
+.grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* ========================================
+   CUSTOM SCROLLBAR
+   ======================================== */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #fff9e6;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bright-yellow);
+    border-radius: 10px;
+    border: 2px solid #fff9e6;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-yellow);
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--bright-yellow) #fff9e6;
+}
+
+/* ========================================
+   INPUT WITH SLIDER LAYOUT
+   ======================================== */
+.input-with-slider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.input-with-slider input[type="number"] {
+    width: 80px;
+    padding: 0.5rem;
+    border: 3px solid var(--primary-blue);
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.input-with-slider input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 0.2rem rgba(214, 52, 71, 0.25);
+}
+
+.input-with-slider input[type="range"] {
+    flex: 1;
+}
+
+/* ========================================
+   ACTION BUTTONS GROUP
+   ======================================== */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.action-buttons button {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* ========================================
+   TOAST NOTIFICATIONS
+   ======================================== */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border: 3px solid var(--primary-blue);
+    border-radius: 15px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    z-index: 2000;
+    display: none;
+    animation: slideIn 0.3s ease-out;
+}
+
+.toast-notification.show {
+    display: block;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   COLLAPSIBLE SECTIONS
+   ======================================== */
+.collapsible-section {
+    margin-bottom: 1rem;
+}
+
+/* Collapsible header - yellow text with arrow */
+.collapsible-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+    color: var(--primary-yellow);
+    transition: all 0.3s;
+}
+
+.collapsible-header:hover {
+    color: #e6b800;
+}
+
+.collapsible-header i {
+    font-size: 0.85rem;
+}
+
+/* Collapsible content with smooth expand/collapse */
+.collapsible-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.collapsible-content.open {
+    max-height: 2000px;
+}
+
+/* ========================================
+   ASYMMETRIC EDGE CONTROLS
+   ======================================== */
+.edge-thickness-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.edge-control {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 10px;
+    border: 2px solid var(--primary-blue);
+}
+
+.edge-control-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
