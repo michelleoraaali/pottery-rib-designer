@@ -1,75 +1,1100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pottery Rib Designer</title>
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pottery Rib Customizer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Titan+One&display=swap');
+
+        :root {
+            --primary-red: #d63447;
+            --primary-blue: #0066cc;
+            --primary-yellow: #f4c430;
+            --bright-red: #e85d75;
+            --bright-blue: #3399ff;
+            --bright-yellow: #f9d96b;
+        }
+
+        body {
+            font-family: 'Titan One', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bright-yellow) 0%, var(--primary-yellow) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--bright-red) 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-family: 'Titan One', 'Arial Black', sans-serif;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .header .subtitle {
+            opacity: 0.95;
+            font-size: 1rem;
+            margin-top: 0.75rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            height: fit-content;
+            border: 4px solid var(--primary-blue);
+        }
+
+        .viewer-container {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 2rem;
+            border: 4px solid var(--primary-red);
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%);
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid var(--bright-yellow);
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+        }
+
+        .control-group label {
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-red);
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--bright-yellow);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-range {
+            accent-color: var(--primary-red);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--bright-blue) 100%);
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 102, 204, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 102, 204, 0.5);
+        }
+
+        .btn-outline-secondary {
+            border: 3px solid var(--primary-red);
+            color: var(--primary-red);
+            border-radius: 50px;
+            padding: 0.75rem 2rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-secondary:hover {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .form-select {
+            border-radius: 10px;
+            border: 3px solid var(--primary-blue);
+            padding: 0.6rem;
+            font-weight: 600;
+        }
+
+        .form-select:focus {
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 0.2rem rgba(237, 28, 36, 0.25);
+        }
+
+        .value-display {
+            display: inline-block;
+            background: var(--bright-yellow);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--primary-blue);
+            font-weight: 700;
+            border: 2px solid var(--primary-blue);
+        }
+
+        #drawing-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #drawing-modal.show {
+            display: flex;
+        }
+
+        .drawing-container {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 4px solid var(--primary-red);
+        }
+
+        #drawing-canvas {
+            border: 4px solid var(--primary-blue);
+            border-radius: 15px;
+            cursor: crosshair;
+            display: block;
+            margin: 1rem auto;
+            background: white;
+        }
+
+        .icon-label {
+            color: var(--primary-red);
+        }
+
+        .info-text {
+            font-size: 0.85rem;
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .floating-icon {
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .dropdown-menu {
+            border: 3px solid var(--primary-blue);
+            border-radius: 15px;
+        }
+
+        .dropdown-item {
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .dropdown-item:hover {
+            background: var(--bright-yellow);
+            color: var(--primary-blue);
+        }
+    </style>
 </head>
 <body>
-
-  <h1>Pottery Rib Designer 🎨</h1>
-
-  <div class="instructions text-center">
-    <p>Use the controls below to customize your pottery rib. You can change the <strong>size, thickness, edge type, curve, and texture</strong>.  
-    For custom edges, select "Draw Custom Curve". When done, you can download the rib as <strong>.STL or .OBJ</strong> for 3D printing.</p>
-  </div>
-
-  <div class="container">
-    <div id="canvas-container"></div>
-    <div class="control-panel">
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label for="size">Size (mm)</label>
-          <input type="range" id="size" min="50" max="200" value="100" class="form-range">
+    <div class="header">
+        <div class="container">
+            <h1>Pottery Rib Customizer</h1>
+            <div class="subtitle">Make your own custom pottery rib! Play around with the different features to generate a 3D model that you can download and 3D print.</div>
         </div>
-        <div class="col-md-3">
-          <label for="thickness">Thickness (mm)</label>
-          <input type="range" id="thickness" min="2" max="15" value="5" class="form-range">
-        </div>
-        <div class="col-md-3">
-          <label for="edgeType">Edge Type</label>
-          <select id="edgeType" class="form-select">
-            <option value="bevel">Bevel</option>
-            <option value="curved">Curved</option>
-            <option value="straight">Straight</option>
-            <option value="custom">Draw Custom Curve</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label for="curve">Curve (0=flat, 1=max)</label>
-          <input type="range" id="curve" min="0" max="1" step="0.01" value="0.2" class="form-range">
-        </div>
-        <div class="col-md-3">
-          <label for="texture">Texture</label>
-          <select id="texture" class="form-select">
-            <option value="smooth">Smooth</option>
-            <option value="ridges">Ridges</option>
-            <option value="dots">Dots</option>
-          </select>
-        </div>
-      </div>
-      <div class="mt-3">
-        <button id="downloadSTL" class="btn btn-primary btn-download me-2">Download STL</button>
-        <button id="downloadOBJ" class="btn btn-success btn-download">Download OBJ</button>
-      </div>
     </div>
-  </div>
 
-  <div id="drawCanvasContainer">
-    <button class="btn btn-danger btn-close-canvas">✕ Close</button><br>
-    <canvas id="drawCanvas" width="500" height="350"></canvas>
-    <button id="saveCurve" class="btn btn-primary mt-2 w-100">Save Curve</button>
-  </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="control-panel">
+                    <h5 class="mb-3">Customize Your Rib</h5>
+                    
+                    <div class="control-group">
+                        <label>
+                            Length <span class="value-display" id="length-value">100mm</span>
+                        </label>
+                        <input type="range" class="form-range" id="length" min="50" max="200" value="100" step="5">
+                    </div>
 
-  <!-- Three.js & Addons -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/exporters/STLExporter.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/exporters/OBJExporter.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="js/main.js"></script>
+                    <div class="control-group">
+                        <label>
+                            Width <span class="value-display" id="width-value">60mm</span>
+                        </label>
+                        <input type="range" class="form-range" id="width" min="30" max="100" value="60" step="5">
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            Thickness <span class="value-display" id="thickness-value">6mm</span>
+                        </label>
+                        <input type="range" class="form-range" id="thickness" min="3" max="12" value="6" step="0.5">
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            Overall Shape
+                        </label>
+                        <select class="form-select" id="shape">
+                            <option value="rectangular">Rectangular</option>
+                            <option value="oval">Oval</option>
+                            <option value="teardrop">Teardrop</option>
+                            <option value="kidney">Kidney</option>
+                            <option value="custom">Draw Custom Shaping Edge</option>
+                        </select>
+                        <div class="info-text" id="custom-shape-info" style="display: none;">
+                            Click to open drawing canvas
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="add-grip-hole" style="margin-right: 0.5rem;">
+                            Add Grip Hole
+                        </label>
+                    </div>
+
+                    <div class="section-header">
+                        Edge Properties
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            Edge Thickness <span class="value-display" id="edge-thickness-value">6mm</span>
+                        </label>
+                        <input type="range" class="form-range" id="edge-thickness" min="0.5" max="12" value="6" step="0.5">
+                        <div class="info-text">Thickness at the perimeter edges (min 0.5mm for FDM printing)</div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            Edge Thickness Application
+                        </label>
+                        <select class="form-select" id="edge-thickness-apply">
+                            <option value="all">Apply to All Edges</option>
+                            <option value="shaping">Apply to Shaping Edge Only</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            Edge Angle Type
+                        </label>
+                        <select class="form-select" id="angle-type">
+                            <option value="straight">Straight (90°)</option>
+                            <option value="bevel">Bevel (30°)</option>
+                            <option value="miter">Miter (45°)</option>
+                            <option value="curve">Curved (180°)</option>
+                            <option value="custom-angle">Custom Angle</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group" id="custom-angle-control" style="display: none;">
+                        <label>
+                            Edge Angle <span class="value-display" id="angle-value">45°</span>
+                        </label>
+                        <input type="range" class="form-range" id="edge-angle" min="0" max="90" value="45" step="5">
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            Edge Depth <span class="value-display" id="edge-depth-value">10mm</span>
+                        </label>
+                        <input type="range" class="form-range" id="edge-depth" min="3" max="30" value="10" step="1">
+                        <div class="info-text">How far the edge angle extends inward</div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="apply-all-edges" checked style="margin-right: 0.5rem;">
+                            Apply angle to all edges
+                        </label>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle w-100" type="button" id="downloadDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Download Your Rib!
+                            </button>
+                            <ul class="dropdown-menu w-100" aria-labelledby="downloadDropdown">
+                                <li><a class="dropdown-item" href="#" onclick="exportSTL(); return false;">Download as STL</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportOBJ(); return false;">Download as OBJ</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportSVG(); return false;">Download as SVG</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="viewer-container">
+                    <h5 class="mb-3">3D Preview</h5>
+                    <div id="canvas-container"></div>
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            Click and drag to rotate • Scroll to zoom
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="drawing-modal">
+        <div class="drawing-container">
+            <h5 class="mb-3">Draw Your Custom Shaping Edge</h5>
+            <p class="text-muted">Draw the shaping edge of your pottery rib from left to right. The opposite edge will remain straight.</p>
+            <canvas id="drawing-canvas" width="500" height="300"></canvas>
+            <div class="d-grid gap-2 mt-3">
+                <button class="btn btn-primary" onclick="applyCustomCurve()">
+                    Apply Shape
+                </button>
+                <button class="btn btn-outline-secondary" onclick="clearDrawing()">
+                    Clear
+                </button>
+                <button class="btn btn-outline-secondary" onclick="closeDrawingModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let appScene, appCamera, appRenderer, appRib;
+        let customCurvePoints = [];
+        let isDrawing = false;
+
+        function initScene() {
+            const container = document.getElementById('canvas-container');
+            
+            appScene = new THREE.Scene();
+            appScene.background = new THREE.Color(0xf0f0f0);
+            
+            appCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            appCamera.position.set(0, 100, 120);
+            appCamera.lookAt(0, 0, 0);
+            
+            appRenderer = new THREE.WebGLRenderer({ antialias: true });
+            appRenderer.setSize(container.clientWidth, container.clientHeight);
+            appRenderer.shadowMap.enabled = false;
+            container.appendChild(appRenderer.domElement);
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+            appScene.add(ambientLight);
+            
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight1.position.set(50, 100, 50);
+            appScene.add(directionalLight1);
+            
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+            directionalLight2.position.set(-50, 50, -50);
+            appScene.add(directionalLight2);
+            
+            const directionalLight3 = new THREE.DirectionalLight(0xffffff, 0.2);
+            directionalLight3.position.set(0, -50, 0);
+            appScene.add(directionalLight3);
+            
+            setupControls();
+            updateRib();
+            animate();
+        }
+
+        function setupControls() {
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            
+            appRenderer.domElement.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+            
+            appRenderer.domElement.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaX = e.clientX - previousMousePosition.x;
+                    const deltaY = e.clientY - previousMousePosition.y;
+                    
+                    appRib.rotation.y += deltaX * 0.01;
+                    appRib.rotation.x += deltaY * 0.01;
+                    
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                }
+            });
+            
+            appRenderer.domElement.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            appRenderer.domElement.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                appCamera.position.z += e.deltaY * 0.1;
+                appCamera.position.z = Math.max(50, Math.min(300, appCamera.position.z));
+            });
+        }
+
+        function createRibGeometry() {
+            const length = parseFloat(document.getElementById('length').value);
+            const width = parseFloat(document.getElementById('width').value);
+            const thickness = parseFloat(document.getElementById('thickness').value);
+            const edgeThickness = parseFloat(document.getElementById('edge-thickness').value);
+            const edgeThicknessApply = document.getElementById('edge-thickness-apply').value;
+            const shape = document.getElementById('shape').value;
+            const angleType = document.getElementById('angle-type').value;
+            const customAngle = parseFloat(document.getElementById('edge-angle').value);
+            const edgeDepth = parseFloat(document.getElementById('edge-depth').value);
+            const applyAllEdges = document.getElementById('apply-all-edges').checked;
+            const addGripHole = document.getElementById('add-grip-hole').checked;
+            
+            if (edgeThickness < 0.5) {
+                alert('Error: Edge thickness cannot be less than 0.5mm to ensure printability with standard FDM 3D printers.');
+                document.getElementById('edge-thickness').value = 0.5;
+                document.getElementById('edge-thickness-value').textContent = '0.5mm';
+                return createRibGeometry();
+            }
+            
+            const segments = 50;
+            const widthSegments = 30;
+            
+            // Grip hole parameters
+            let holeRadius = 0;
+            const bevelAngle = 45; // degrees
+            
+            if (addGripHole) {
+                const smallerDimension = Math.min(length, width);
+                holeRadius = smallerDimension * 0.12; // Small circular hole
+            }
+            
+            const topVertices = [];
+            const bottomVertices = [];
+            const colors = [];
+            const isInHoleArray = [];
+            
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const x = (t - 0.5) * length;
+                
+                for (let j = 0; j <= widthSegments; j++) {
+                    const s = j / widthSegments;
+                    let y = (s - 0.5) * width;
+                    
+                    let shapeModifier = 1;
+                    if (shape === 'custom' && customCurvePoints.length > 0) {
+                        const pointIndex = Math.floor(t * (customCurvePoints.length - 1));
+                        const point = customCurvePoints[Math.min(pointIndex, customCurvePoints.length - 1)];
+                        if (point) {
+                            const curveInfluence = s;
+                            const centerY = 0.5;
+                            const curveModifier = 1 - Math.abs(point.y - centerY) * 1.5;
+                            const clampedModifier = Math.max(0.1, Math.min(1, curveModifier));
+                            shapeModifier = 1.0 * (1 - curveInfluence) + clampedModifier * curveInfluence;
+                        }
+                    } else {
+                        shapeModifier = getShapeModifier(t, s, shape);
+                    }
+                    
+                    y *= shapeModifier;
+                    
+                    const actualWidth = width * Math.abs(shapeModifier);
+                    const actualLength = length;
+                    const distFromTop = actualWidth * (1 - s);
+                    const distFromBottom = actualWidth * s;
+                    const distFromLeft = actualLength * t;
+                    const distFromRight = actualLength * (1 - t);
+                    let minDistToEdge = Math.min(distFromTop, distFromBottom, distFromLeft, distFromRight);
+                    
+                    const isNearTop = distFromTop === minDistToEdge;
+                    const isShapingEdge = isNearTop;
+                    
+                    let currentThickness = thickness;
+                    
+                    if (minDistToEdge <= edgeDepth) {
+                        const edgeProgress = minDistToEdge / edgeDepth;
+                        let shouldApplyEdgeThickness = false;
+                        if (edgeThicknessApply === 'all') {
+                            shouldApplyEdgeThickness = true;
+                        } else if (edgeThicknessApply === 'shaping' && isShapingEdge) {
+                            shouldApplyEdgeThickness = true;
+                        }
+                        if (shouldApplyEdgeThickness) {
+                            currentThickness = edgeThickness * (1 - edgeProgress) + thickness * edgeProgress;
+                        }
+                    }
+                    
+                    let topZ = currentThickness / 2;
+                    let bottomZ = -currentThickness / 2;
+                    
+                    if (minDistToEdge <= edgeDepth) {
+                        const edgeProgress = minDistToEdge / edgeDepth;
+                        let shouldApplyAngle = false;
+                        if (applyAllEdges || shape === 'oval' || shape === 'custom') {
+                            shouldApplyAngle = true;
+                        } else {
+                            shouldApplyAngle = isNearTop || (distFromBottom === minDistToEdge) || 
+                                             (distFromLeft <= edgeDepth) || (distFromRight <= edgeDepth);
+                        }
+                        if (shouldApplyAngle) {
+                            const angleEffect = 1 - edgeProgress;
+                            topZ = applyEdgeAngle(angleType, customAngle, currentThickness, angleEffect);
+                            topZ = topZ * angleEffect + (currentThickness / 2) * (1 - angleEffect);
+                        }
+                    }
+                    
+                    // Check if this vertex is in the hole and apply 45° bevel
+                    let inHole = false;
+                    if (addGripHole) {
+                        const distFromHoleCenter = Math.sqrt(x * x + y * y);
+                        
+                        if (distFromHoleCenter <= holeRadius) {
+                            // Calculate 45-degree bevel slope inwards
+                            const distanceFromEdge = holeRadius - distFromHoleCenter;
+                            const bevelDepth = Math.min(distanceFromEdge, currentThickness / 2);
+                            
+                            // Slope inward at 45 degrees
+                            topZ = currentThickness / 2 - bevelDepth;
+                            
+                            // Mark as in hole if past the bevel
+                            if (distanceFromEdge > currentThickness / 2) {
+                                inHole = true;
+                            }
+                        }
+                    }
+                    
+                    isInHoleArray.push(inHole);
+                    
+                    topVertices.push(new THREE.Vector3(x, y, topZ));
+                    bottomVertices.push(new THREE.Vector3(x, y, bottomZ));
+                    
+                    // Color vertices - highlight custom shaping edge
+                    const isTopEdge = (j === widthSegments);
+                    if (shape === 'custom' && isTopEdge) {
+                        colors.push(0.2, 0.8, 0.8); // Cyan highlight
+                        colors.push(0.2, 0.8, 0.8);
+                    } else {
+                        colors.push(0.84, 0.36, 0.46); // Muted red
+                        colors.push(0.84, 0.36, 0.46);
+                    }
+                }
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const indices = [];
+            
+            topVertices.forEach(v => vertices.push(v.x, v.y, v.z));
+            bottomVertices.forEach(v => vertices.push(v.x, v.y, v.z));
+            
+            const topOffset = 0;
+            const bottomOffset = topVertices.length;
+            
+            // Top surface faces (skip if in hole)
+            for (let i = 0; i < segments; i++) {
+                for (let j = 0; j < widthSegments; j++) {
+                    const idx0 = i * (widthSegments + 1) + j;
+                    const idx1 = (i + 1) * (widthSegments + 1) + j;
+                    const idx2 = (i + 1) * (widthSegments + 1) + (j + 1);
+                    const idx3 = i * (widthSegments + 1) + (j + 1);
+                    
+                    const anyInHole = isInHoleArray[idx0] || isInHoleArray[idx1] || 
+                                     isInHoleArray[idx2] || isInHoleArray[idx3];
+                    
+                    if (!anyInHole) {
+                        const a = topOffset + idx0;
+                        const b = topOffset + idx1;
+                        const c = topOffset + idx2;
+                        const d = topOffset + idx3;
+                        
+                        indices.push(a, b, c);
+                        indices.push(a, c, d);
+                    }
+                }
+            }
+            
+            // Bottom surface faces (skip if in hole)
+            for (let i = 0; i < segments; i++) {
+                for (let j = 0; j < widthSegments; j++) {
+                    const idx0 = i * (widthSegments + 1) + j;
+                    const idx1 = (i + 1) * (widthSegments + 1) + j;
+                    const idx2 = (i + 1) * (widthSegments + 1) + (j + 1);
+                    const idx3 = i * (widthSegments + 1) + (j + 1);
+                    
+                    const anyInHole = isInHoleArray[idx0] || isInHoleArray[idx1] || 
+                                     isInHoleArray[idx2] || isInHoleArray[idx3];
+                    
+                    if (!anyInHole) {
+                        const a = bottomOffset + idx0;
+                        const b = bottomOffset + idx1;
+                        const c = bottomOffset + idx2;
+                        const d = bottomOffset + idx3;
+                        
+                        indices.push(a, c, b);
+                        indices.push(a, d, c);
+                    }
+                }
+            }
+            
+            // Outer perimeter side walls
+            for (let i = 0; i < segments; i++) {
+                const topA = topOffset + i * (widthSegments + 1);
+                const topB = topOffset + (i + 1) * (widthSegments + 1);
+                const botA = bottomOffset + i * (widthSegments + 1);
+                const botB = bottomOffset + (i + 1) * (widthSegments + 1);
+                indices.push(topA, botA, botB);
+                indices.push(topA, botB, topB);
+                
+                const topC = topOffset + i * (widthSegments + 1) + widthSegments;
+                const topD = topOffset + (i + 1) * (widthSegments + 1) + widthSegments;
+                const botC = bottomOffset + i * (widthSegments + 1) + widthSegments;
+                const botD = bottomOffset + (i + 1) * (widthSegments + 1) + widthSegments;
+                indices.push(topC, topD, botD);
+                indices.push(topC, botD, botC);
+            }
+            
+            for (let j = 0; j < widthSegments; j++) {
+                const topA = topOffset + j;
+                const topB = topOffset + j + 1;
+                const botA = bottomOffset + j;
+                const botB = bottomOffset + j + 1;
+                indices.push(topA, topB, botB);
+                indices.push(topA, botB, botA);
+                
+                const topC = topOffset + segments * (widthSegments + 1) + j;
+                const topD = topOffset + segments * (widthSegments + 1) + j + 1;
+                const botC = bottomOffset + segments * (widthSegments + 1) + j;
+                const botD = bottomOffset + segments * (widthSegments + 1) + j + 1;
+                indices.push(topC, botC, botD);
+                indices.push(topC, botD, topD);
+            }
+            
+            // Inner hole walls (if hole exists)
+            if (addGripHole) {
+                for (let i = 0; i < segments; i++) {
+                    for (let j = 0; j < widthSegments; j++) {
+                        const idx0 = i * (widthSegments + 1) + j;
+                        const idx1 = (i + 1) * (widthSegments + 1) + j;
+                        const idx2 = (i + 1) * (widthSegments + 1) + (j + 1);
+                        const idx3 = i * (widthSegments + 1) + (j + 1);
+                        
+                        // Add walls between hole and non-hole vertices
+                        if (isInHoleArray[idx0] !== isInHoleArray[idx1]) {
+                            const t0 = topOffset + idx0;
+                            const t1 = topOffset + idx1;
+                            const b0 = bottomOffset + idx0;
+                            const b1 = bottomOffset + idx1;
+                            if (isInHoleArray[idx0]) {
+                                indices.push(t1, b1, b0);
+                                indices.push(t1, b0, t0);
+                            } else {
+                                indices.push(t0, b0, b1);
+                                indices.push(t0, b1, t1);
+                            }
+                        }
+                        
+                        if (isInHoleArray[idx1] !== isInHoleArray[idx2]) {
+                            const t1 = topOffset + idx1;
+                            const t2 = topOffset + idx2;
+                            const b1 = bottomOffset + idx1;
+                            const b2 = bottomOffset + idx2;
+                            if (isInHoleArray[idx1]) {
+                                indices.push(t2, b2, b1);
+                                indices.push(t2, b1, t1);
+                            } else {
+                                indices.push(t1, b1, b2);
+                                indices.push(t1, b2, t2);
+                            }
+                        }
+                        
+                        if (isInHoleArray[idx2] !== isInHoleArray[idx3]) {
+                            const t2 = topOffset + idx2;
+                            const t3 = topOffset + idx3;
+                            const b2 = bottomOffset + idx2;
+                            const b3 = bottomOffset + idx3;
+                            if (isInHoleArray[idx2]) {
+                                indices.push(t3, b3, b2);
+                                indices.push(t3, b2, t2);
+                            } else {
+                                indices.push(t2, b2, b3);
+                                indices.push(t2, b3, t3);
+                            }
+                        }
+                        
+                        if (isInHoleArray[idx3] !== isInHoleArray[idx0]) {
+                            const t3 = topOffset + idx3;
+                            const t0 = topOffset + idx0;
+                            const b3 = bottomOffset + idx3;
+                            const b0 = bottomOffset + idx0;
+                            if (isInHoleArray[idx3]) {
+                                indices.push(t0, b0, b3);
+                                indices.push(t0, b3, t3);
+                            } else {
+                                indices.push(t3, b3, b0);
+                                indices.push(t3, b0, t0);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            geometry.setIndex(indices);
+            geometry.computeVertexNormals();
+            
+            return geometry;
+        }
+
+        function getShapeModifier(t, s, shape) {
+            switch(shape) {
+                case 'oval':
+                    return Math.sqrt(1 - Math.pow(2 * t - 1, 2)) * 0.8 + 0.2;
+                case 'teardrop':
+                    return (1 - t) * 0.7 + 0.3;
+                case 'kidney':
+                    return 1 - Math.abs(Math.sin(t * Math.PI)) * 0.3 * Math.abs(s - 0.5) * 2;
+                default:
+                    return 1;
+            }
+        }
+
+        function applyEdgeAngle(angleType, customAngle, thickness, angleEffect) {
+            let topZ = thickness / 2;
+            
+            if (angleType === 'straight') {
+                return topZ;
+            } else if (angleType === 'bevel') {
+                const angleRad = (30 * Math.PI) / 180;
+                const reduction = Math.tan(angleRad) * (thickness * angleEffect * 0.5);
+                topZ = Math.max(thickness / 2 - reduction, 0.5);
+            } else if (angleType === 'miter') {
+                const angleRad = (45 * Math.PI) / 180;
+                const reduction = Math.tan(angleRad) * (thickness * angleEffect * 0.5);
+                topZ = Math.max(thickness / 2 - reduction, 0.5);
+            } else if (angleType === 'curve') {
+                const curveAmount = Math.pow(angleEffect, 2);
+                topZ = thickness / 2 * (1 - curveAmount * 0.8);
+            } else if (angleType === 'custom-angle') {
+                const angleRad = (customAngle * Math.PI) / 180;
+                const reduction = Math.tan(angleRad) * (thickness * angleEffect * 0.5);
+                topZ = Math.max(thickness / 2 - reduction, 0.5);
+            }
+            
+            return topZ;
+        }
+
+        function updateRib() {
+            if (appRib) {
+                appScene.remove(appRib);
+            }
+            
+            const geometry = createRibGeometry();
+            const material = new THREE.MeshStandardMaterial({
+                color: 0xd63447,
+                roughness: 0.3,
+                metalness: 0.1,
+                side: THREE.DoubleSide,
+                vertexColors: true
+            });
+            
+            appRib = new THREE.Mesh(geometry, material);
+            appRib.castShadow = true;
+            appRib.receiveShadow = true;
+            appScene.add(appRib);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            appRenderer.render(appScene, appCamera);
+        }
+
+        const drawingCanvas = document.getElementById('drawing-canvas');
+        const ctx = drawingCanvas.getContext('2d');
+
+        drawingCanvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            customCurvePoints = [];
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            drawGrid();
+        });
+
+        function exportSVG() {
+            // Create SVG representation (top-down view)
+            const geometry = appRib.geometry;
+            const vertices = geometry.attributes.position.array;
+            const indices = geometry.index.array;
+            
+            // Find bounds for scaling
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            for (let i = 0; i < vertices.length; i += 3) {
+                minX = Math.min(minX, vertices[i]);
+                maxX = Math.max(maxX, vertices[i]);
+                minY = Math.min(minY, vertices[i + 1]);
+                maxY = Math.max(maxY, vertices[i + 1]);
+            }
+            
+            const width = maxX - minX;
+            const height = maxY - minY;
+            const scale = 2;
+            const svgWidth = width * scale + 20;
+            const svgHeight = height * scale + 20;
+            
+            let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+  <rect width="100%" height="100%" fill="white"/>
+  <g transform="translate(${10 - minX * scale}, ${10 - minY * scale})">
+`;
+            
+            // Draw outline
+            const outlinePoints = [];
+            for (let i = 0; i < vertices.length; i += 3) {
+                if (vertices[i + 2] > 0) { // Top surface only
+                    outlinePoints.push({
+                        x: vertices[i] * scale,
+                        y: vertices[i + 1] * scale
+                    });
+                }
+            }
+            
+            if (outlinePoints.length > 0) {
+                svgContent += `    <polygon points="`;
+                outlinePoints.forEach((p, idx) => {
+                    if (idx % 10 === 0) { // Sample points to reduce file size
+                        svgContent += `${p.x},${p.y} `;
+                    }
+                });
+                svgContent += `" fill="#d63447" stroke="#000" stroke-width="1"/>
+`;
+            }
+            
+            svgContent += `  </g>
+</svg>`;
+            
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'pottery_rib.svg';
+            link.click();
+        }
+
+        drawingCanvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            
+            const rect = drawingCanvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / drawingCanvas.width;
+            const y = (e.clientY - rect.top) / drawingCanvas.height;
+            
+            customCurvePoints.push({ x, y });
+            
+            ctx.fillStyle = '#0066cc';
+            ctx.fillRect((e.clientX - rect.left) - 3, (e.clientY - rect.top) - 3, 6, 6);
+        });
+
+        drawingCanvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        function drawGrid() {
+            ctx.strokeStyle = '#f9d96b';
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i <= 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * drawingCanvas.height / 10);
+                ctx.lineTo(drawingCanvas.width, i * drawingCanvas.height / 10);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(i * drawingCanvas.width / 10, 0);
+                ctx.lineTo(i * drawingCanvas.width / 10, drawingCanvas.height);
+                ctx.stroke();
+            }
+        }
+
+        function clearDrawing() {
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            drawGrid();
+            customCurvePoints = [];
+        }
+
+        function applyCustomCurve() {
+            if (customCurvePoints.length > 0) {
+                updateRib();
+                closeDrawingModal();
+            } else {
+                alert('Please draw a curve first!');
+            }
+        }
+
+        function closeDrawingModal() {
+            document.getElementById('drawing-modal').classList.remove('show');
+        }
+
+        function exportSTL() {
+            const geometry = appRib.geometry;
+            const vertices = geometry.attributes.position.array;
+            const indices = geometry.index.array;
+            
+            let output = 'solid pottery_rib\n';
+            
+            for (let i = 0; i < indices.length; i += 3) {
+                const i1 = indices[i] * 3;
+                const i2 = indices[i + 1] * 3;
+                const i3 = indices[i + 2] * 3;
+                
+                const v1 = new THREE.Vector3(vertices[i1], vertices[i1 + 1], vertices[i1 + 2]);
+                const v2 = new THREE.Vector3(vertices[i2], vertices[i2 + 1], vertices[i2 + 2]);
+                const v3 = new THREE.Vector3(vertices[i3], vertices[i3 + 1], vertices[i3 + 2]);
+                
+                const normal = new THREE.Vector3().crossVectors(
+                    new THREE.Vector3().subVectors(v2, v1),
+                    new THREE.Vector3().subVectors(v3, v1)
+                ).normalize();
+                
+                output += `  facet normal ${normal.x} ${normal.y} ${normal.z}\n`;
+                output += '    outer loop\n';
+                output += `      vertex ${v1.x} ${v1.y} ${v1.z}\n`;
+                output += `      vertex ${v2.x} ${v2.y} ${v2.z}\n`;
+                output += `      vertex ${v3.x} ${v3.y} ${v3.z}\n`;
+                output += '    endloop\n';
+                output += '  endfacet\n';
+            }
+            
+            output += 'endsolid pottery_rib\n';
+            
+            const blob = new Blob([output], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'pottery_rib.stl';
+            link.click();
+        }
+
+        function exportOBJ() {
+            const geometry = appRib.geometry;
+            const vertices = geometry.attributes.position.array;
+            const indices = geometry.index.array;
+            
+            let output = '# Pottery Rib\n';
+            
+            for (let i = 0; i < vertices.length; i += 3) {
+                output += `v ${vertices[i]} ${vertices[i + 1]} ${vertices[i + 2]}\n`;
+            }
+            
+            for (let i = 0; i < indices.length; i += 3) {
+                output += `f ${indices[i] + 1} ${indices[i + 1] + 1} ${indices[i + 2] + 1}\n`;
+            }
+            
+            const blob = new Blob([output], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'pottery_rib.obj';
+            link.click();
+        }
+
+        document.getElementById('length').addEventListener('input', (e) => {
+            document.getElementById('length-value').textContent = e.target.value + 'mm';
+            updateRib();
+        });
+
+        document.getElementById('width').addEventListener('input', (e) => {
+            document.getElementById('width-value').textContent = e.target.value + 'mm';
+            updateRib();
+        });
+
+        document.getElementById('thickness').addEventListener('input', (e) => {
+            document.getElementById('thickness-value').textContent = e.target.value + 'mm';
+            updateRib();
+        });
+
+        document.getElementById('edge-thickness').addEventListener('input', (e) => {
+            document.getElementById('edge-thickness-value').textContent = e.target.value + 'mm';
+            updateRib();
+        });
+
+        document.getElementById('edge-thickness-apply').addEventListener('change', updateRib);
+
+        document.getElementById('edge-angle').addEventListener('input', (e) => {
+            document.getElementById('angle-value').textContent = e.target.value + '°';
+            updateRib();
+        });
+
+        document.getElementById('edge-depth').addEventListener('input', (e) => {
+            document.getElementById('edge-depth-value').textContent = e.target.value + 'mm';
+            updateRib();
+        });
+
+        document.getElementById('shape').addEventListener('change', (e) => {
+            const customShapeInfo = document.getElementById('custom-shape-info');
+            
+            if (e.target.value === 'custom') {
+                customShapeInfo.style.display = 'block';
+                document.getElementById('drawing-modal').classList.add('show');
+                drawGrid();
+            } else {
+                customShapeInfo.style.display = 'none';
+                updateRib();
+            }
+        });
+        
+        document.getElementById('apply-all-edges').addEventListener('change', updateRib);
+        document.getElementById('add-grip-hole').addEventListener('change', updateRib);
+        
+        document.getElementById('angle-type').addEventListener('change', (e) => {
+            const customAngleControl = document.getElementById('custom-angle-control');
+            customAngleControl.style.display = e.target.value === 'custom-angle' ? 'block' : 'none';
+            updateRib();
+        });
+
+        window.addEventListener('load', () => {
+            initScene();
+            drawGrid();
+        });
+
+        window.addEventListener('resize', () => {
+            const container = document.getElementById('canvas-container');
+            appCamera.aspect = container.clientWidth / container.clientHeight;
+            appCamera.updateProjectionMatrix();
+            appRenderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
 </body>
 </html>
