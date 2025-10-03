@@ -7,7 +7,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Titan+One&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
 
         :root {
             --primary-red: #d63447;
@@ -19,7 +19,7 @@
         }
 
         body {
-            font-family: 'Titan One', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, var(--bright-yellow) 0%, var(--primary-yellow) 100%);
             min-height: 100vh;
             overflow-x: hidden;
@@ -34,9 +34,9 @@
         }
 
         .header h1 {
-            font-family: 'Titan One', 'Arial Black', sans-serif;
-            font-weight: 700;
-            letter-spacing: 2px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            letter-spacing: 1px;
             margin: 0;
             text-transform: uppercase;
         }
@@ -45,8 +45,8 @@
             opacity: 0.95;
             font-size: 1rem;
             margin-top: 0.75rem;
-            font-weight: 500;
-            line-height: 1.5;
+            font-weight: 600;
+            line-height: 1.6;
         }
 
         .control-panel {
@@ -74,6 +74,29 @@
             border-radius: 15px;
             overflow: hidden;
             background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%);
+            position: relative;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            pointer-events: all;
         }
 
         .control-group {
@@ -97,7 +120,7 @@
 
         .section-header {
             font-size: 1.1rem;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--primary-red);
             margin-top: 0.5rem;
             margin-bottom: 1rem;
@@ -150,7 +173,7 @@
 
         .form-select:focus {
             border-color: var(--primary-red);
-            box-shadow: 0 0 0 0.2rem rgba(237, 28, 36, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(214, 52, 71, 0.25);
         }
 
         .value-display {
@@ -211,14 +234,18 @@
             margin-top: 0.5rem;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        .floating-icon {
-            display: inline-block;
-            animation: float 3s ease-in-out infinite;
+        .spinner {
+            border: 4px solid var(--bright-yellow);
+            border-top: 4px solid var(--primary-red);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
         }
 
         .dropdown-menu {
@@ -234,6 +261,21 @@
         .dropdown-item:hover {
             background: var(--bright-yellow);
             color: var(--primary-blue);
+        }
+
+        .canvas-instructions {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+            pointer-events: none;
         }
     </style>
 </head>
@@ -279,6 +321,7 @@
                         <select class="form-select" id="shape">
                             <option value="rectangular">Rectangular</option>
                             <option value="oval">Oval</option>
+                            <option value="circle">Circle</option>
                             <option value="teardrop">Teardrop</option>
                             <option value="kidney">Kidney</option>
                             <option value="custom">Draw Custom Shaping Edge</option>
@@ -370,11 +413,13 @@
             <div class="col-lg-8">
                 <div class="viewer-container">
                     <h5 class="mb-3">3D Preview</h5>
-                    <div id="canvas-container"></div>
-                    <div class="text-center mt-3">
-                        <small class="text-muted">
+                    <div id="canvas-container">
+                        <div class="loading-overlay" id="loading-overlay">
+                            <div class="spinner"></div>
+                        </div>
+                        <div class="canvas-instructions">
                             Click and drag to rotate • Scroll to zoom
-                        </small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -403,391 +448,122 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
-        let appScene, appCamera, appRenderer, appRib;
+        // ===== GLOBAL VARIABLES =====
+        let appScene, appCamera, appRenderer, appRib, controls;
         let customCurvePoints = [];
         let isDrawing = false;
+        let updateTimeout = null;
 
+        // ===== INITIALIZATION =====
         function initScene() {
             const container = document.getElementById('canvas-container');
             
+            // Scene setup
             appScene = new THREE.Scene();
-            appScene.background = new THREE.Color(0xf0f0f0);
+            appScene.background = new THREE.Color(0xe6f2ff);
+            appScene.fog = new THREE.Fog(0xe6f2ff, 100, 400);
             
+            // Camera setup
             appCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-            appCamera.position.set(0, 100, 120);
+            appCamera.position.set(80, 80, 120);
             appCamera.lookAt(0, 0, 0);
             
-            appRenderer = new THREE.WebGLRenderer({ antialias: true });
+            // Renderer setup with anti-aliasing
+            appRenderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: true
+            });
             appRenderer.setSize(container.clientWidth, container.clientHeight);
-            appRenderer.shadowMap.enabled = false;
+            appRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            appRenderer.shadowMap.enabled = true;
+            appRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
             container.appendChild(appRenderer.domElement);
             
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+            // Improved lighting setup
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             appScene.add(ambientLight);
             
-            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.5);
-            directionalLight1.position.set(50, 100, 50);
-            appScene.add(directionalLight1);
+            const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            mainLight.position.set(50, 100, 50);
+            mainLight.castShadow = true;
+            mainLight.shadow.mapSize.width = 2048;
+            mainLight.shadow.mapSize.height = 2048;
+            mainLight.shadow.camera.near = 0.5;
+            mainLight.shadow.camera.far = 500;
+            appScene.add(mainLight);
             
-            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
-            directionalLight2.position.set(-50, 50, -50);
-            appScene.add(directionalLight2);
+            const fillLight = new THREE.DirectionalLight(0x99ccff, 0.3);
+            fillLight.position.set(-50, 30, -50);
+            appScene.add(fillLight);
             
-            const directionalLight3 = new THREE.DirectionalLight(0xffffff, 0.2);
-            directionalLight3.position.set(0, -50, 0);
-            appScene.add(directionalLight3);
+            const rimLight = new THREE.DirectionalLight(0xffeeaa, 0.2);
+            rimLight.position.set(0, -20, 0);
+            appScene.add(rimLight);
             
-            setupControls();
+            // Add ground plane for shadow
+            const groundGeometry = new THREE.PlaneGeometry(500, 500);
+            const groundMaterial = new THREE.ShadowMaterial({ opacity: 0.1 });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -20;
+            ground.receiveShadow = true;
+            appScene.add(ground);
+            
+            setupOrbitControls();
             updateRib();
             animate();
         }
 
-        function setupControls() {
+        // ===== ORBIT CONTROLS (Manual Implementation) =====
+        function setupOrbitControls() {
             let isDragging = false;
             let previousMousePosition = { x: 0, y: 0 };
             
             appRenderer.domElement.addEventListener('mousedown', (e) => {
                 isDragging = true;
                 previousMousePosition = { x: e.clientX, y: e.clientY };
+                appRenderer.domElement.style.cursor = 'grabbing';
             });
             
             appRenderer.domElement.addEventListener('mousemove', (e) => {
-                if (isDragging) {
+                if (isDragging && appRib) {
                     const deltaX = e.clientX - previousMousePosition.x;
                     const deltaY = e.clientY - previousMousePosition.y;
                     
                     appRib.rotation.y += deltaX * 0.01;
                     appRib.rotation.x += deltaY * 0.01;
                     
+                    // Clamp X rotation to prevent flipping
+                    appRib.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, appRib.rotation.x));
+                    
                     previousMousePosition = { x: e.clientX, y: e.clientY };
                 }
             });
             
-            appRenderer.domElement.addEventListener('mouseup', () => {
+            document.addEventListener('mouseup', () => {
                 isDragging = false;
+                appRenderer.domElement.style.cursor = 'grab';
             });
             
             appRenderer.domElement.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                appCamera.position.z += e.deltaY * 0.1;
+                const zoomSpeed = 0.1;
+                appCamera.position.z += e.deltaY * zoomSpeed;
                 appCamera.position.z = Math.max(50, Math.min(300, appCamera.position.z));
-            });
+            }, { passive: false });
+            
+            appRenderer.domElement.style.cursor = 'grab';
         }
 
-        function createRibGeometry() {
-            const length = parseFloat(document.getElementById('length').value);
-            const width = parseFloat(document.getElementById('width').value);
-            const thickness = parseFloat(document.getElementById('thickness').value);
-            const edgeThickness = parseFloat(document.getElementById('edge-thickness').value);
-            const edgeThicknessApply = document.getElementById('edge-thickness-apply').value;
-            const shape = document.getElementById('shape').value;
-            const angleType = document.getElementById('angle-type').value;
-            const customAngle = parseFloat(document.getElementById('edge-angle').value);
-            const edgeDepth = parseFloat(document.getElementById('edge-depth').value);
-            const applyAllEdges = document.getElementById('apply-all-edges').checked;
-            const addGripHole = document.getElementById('add-grip-hole').checked;
-            
-            if (edgeThickness < 0.5) {
-                alert('Error: Edge thickness cannot be less than 0.5mm to ensure printability with standard FDM 3D printers.');
-                document.getElementById('edge-thickness').value = 0.5;
-                document.getElementById('edge-thickness-value').textContent = '0.5mm';
-                return createRibGeometry();
-            }
-            
-            const segments = 120;
-            const widthSegments = 80;
-            
-            // Grip hole parameters
-            let holeRadius = 0;
-            const bevelAngle = 45; // degrees
-            
-            if (addGripHole) {
-                const smallerDimension = Math.min(length, width);
-                holeRadius = smallerDimension * 0.12; // Small circular hole
-            }
-            
-            const topVertices = [];
-            const bottomVertices = [];
-            const colors = [];
-            const isInHoleArray = [];
-            
-            for (let i = 0; i <= segments; i++) {
-                const t = i / segments;
-                const x = (t - 0.5) * length;
-                
-                for (let j = 0; j <= widthSegments; j++) {
-                    const s = j / widthSegments;
-                    let y = (s - 0.5) * width;
-                    
-                    let shapeModifier = 1;
-                    if (shape === 'custom' && customCurvePoints.length > 0) {
-                        const pointIndex = Math.floor(t * (customCurvePoints.length - 1));
-                        const point = customCurvePoints[Math.min(pointIndex, customCurvePoints.length - 1)];
-                        if (point) {
-                            const curveInfluence = s;
-                            const centerY = 0.5;
-                            const curveModifier = 1 - Math.abs(point.y - centerY) * 1.5;
-                            const clampedModifier = Math.max(0.1, Math.min(1, curveModifier));
-                            shapeModifier = 1.0 * (1 - curveInfluence) + clampedModifier * curveInfluence;
-                        }
-                    } else {
-                        shapeModifier = getShapeModifier(t, s, shape);
-                    }
-                    
-                    y *= shapeModifier;
-                    
-                    const actualWidth = width * Math.abs(shapeModifier);
-                    const actualLength = length;
-                    const distFromTop = actualWidth * (1 - s);
-                    const distFromBottom = actualWidth * s;
-                    const distFromLeft = actualLength * t;
-                    const distFromRight = actualLength * (1 - t);
-                    let minDistToEdge = Math.min(distFromTop, distFromBottom, distFromLeft, distFromRight);
-                    
-                    const isNearTop = distFromTop === minDistToEdge;
-                    const isShapingEdge = isNearTop;
-                    
-                    let currentThickness = thickness;
-                    
-                    if (minDistToEdge <= edgeDepth) {
-                        const edgeProgress = minDistToEdge / edgeDepth;
-                        let shouldApplyEdgeThickness = false;
-                        if (edgeThicknessApply === 'all') {
-                            shouldApplyEdgeThickness = true;
-                        } else if (edgeThicknessApply === 'shaping' && isShapingEdge) {
-                            shouldApplyEdgeThickness = true;
-                        }
-                        if (shouldApplyEdgeThickness) {
-                            currentThickness = edgeThickness * (1 - edgeProgress) + thickness * edgeProgress;
-                        }
-                    }
-                    
-                    let topZ = currentThickness / 2;
-                    let bottomZ = -currentThickness / 2;
-                    
-                    if (minDistToEdge <= edgeDepth) {
-                        const edgeProgress = minDistToEdge / edgeDepth;
-                        let shouldApplyAngle = false;
-                        if (applyAllEdges || shape === 'oval' || shape === 'custom') {
-                            shouldApplyAngle = true;
-                        } else {
-                            shouldApplyAngle = isNearTop || (distFromBottom === minDistToEdge) || 
-                                             (distFromLeft <= edgeDepth) || (distFromRight <= edgeDepth);
-                        }
-                        if (shouldApplyAngle) {
-                            const angleEffect = 1 - edgeProgress;
-                            topZ = applyEdgeAngle(angleType, customAngle, currentThickness, angleEffect);
-                            topZ = topZ * angleEffect + (currentThickness / 2) * (1 - angleEffect);
-                        }
-                    }
-                    
-                    // Check if this vertex is in the hole and apply 45° bevel
-                    let inHole = false;
-                    if (addGripHole) {
-                        const distFromHoleCenter = Math.sqrt(x * x + y * y);
-                        
-                        if (distFromHoleCenter <= holeRadius) {
-                            // Calculate 45-degree bevel slope inwards
-                            const distanceFromEdge = holeRadius - distFromHoleCenter;
-                            const bevelDepth = Math.min(distanceFromEdge, currentThickness / 2);
-                            
-                            // Slope inward at 45 degrees
-                            topZ = currentThickness / 2 - bevelDepth;
-                            
-                            // Mark as in hole if past the bevel
-                            if (distanceFromEdge > currentThickness / 2) {
-                                inHole = true;
-                            }
-                        }
-                    }
-                    
-                    isInHoleArray.push(inHole);
-                    
-                    topVertices.push(new THREE.Vector3(x, y, topZ));
-                    bottomVertices.push(new THREE.Vector3(x, y, bottomZ));
-                    
-                    // Color vertices - highlight custom shaping edge
-                    const isTopEdge = (j === widthSegments);
-                    if (shape === 'custom' && isTopEdge) {
-                        colors.push(0.2, 0.8, 0.8); // Cyan highlight
-                        colors.push(0.2, 0.8, 0.8);
-                    } else {
-                        colors.push(0.84, 0.36, 0.46); // Muted red
-                        colors.push(0.84, 0.36, 0.46);
-                    }
-                }
-            }
-            
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            const indices = [];
-            
-            topVertices.forEach(v => vertices.push(v.x, v.y, v.z));
-            bottomVertices.forEach(v => vertices.push(v.x, v.y, v.z));
-            
-            const topOffset = 0;
-            const bottomOffset = topVertices.length;
-            
-            // Top surface faces (skip if in hole)
-            for (let i = 0; i < segments; i++) {
-                for (let j = 0; j < widthSegments; j++) {
-                    const idx0 = i * (widthSegments + 1) + j;
-                    const idx1 = (i + 1) * (widthSegments + 1) + j;
-                    const idx2 = (i + 1) * (widthSegments + 1) + (j + 1);
-                    const idx3 = i * (widthSegments + 1) + (j + 1);
-                    
-                    const anyInHole = isInHoleArray[idx0] || isInHoleArray[idx1] || 
-                                     isInHoleArray[idx2] || isInHoleArray[idx3];
-                    
-                    if (!anyInHole) {
-                        const a = topOffset + idx0;
-                        const b = topOffset + idx1;
-                        const c = topOffset + idx2;
-                        const d = topOffset + idx3;
-                        
-                        indices.push(a, b, c);
-                        indices.push(a, c, d);
-                    }
-                }
-            }
-            
-            // Bottom surface faces (skip if in hole)
-            for (let i = 0; i < segments; i++) {
-                for (let j = 0; j < widthSegments; j++) {
-                    const idx0 = i * (widthSegments + 1) + j;
-                    const idx1 = (i + 1) * (widthSegments + 1) + j;
-                    const idx2 = (i + 1) * (widthSegments + 1) + (j + 1);
-                    const idx3 = i * (widthSegments + 1) + (j + 1);
-                    
-                    const anyInHole = isInHoleArray[idx0] || isInHoleArray[idx1] || 
-                                     isInHoleArray[idx2] || isInHoleArray[idx3];
-                    
-                    if (!anyInHole) {
-                        const a = bottomOffset + idx0;
-                        const b = bottomOffset + idx1;
-                        const c = bottomOffset + idx2;
-                        const d = bottomOffset + idx3;
-                        
-                        indices.push(a, c, b);
-                        indices.push(a, d, c);
-                    }
-                }
-            }
-            
-            // Outer perimeter side walls
-            for (let i = 0; i < segments; i++) {
-                const topA = topOffset + i * (widthSegments + 1);
-                const topB = topOffset + (i + 1) * (widthSegments + 1);
-                const botA = bottomOffset + i * (widthSegments + 1);
-                const botB = bottomOffset + (i + 1) * (widthSegments + 1);
-                indices.push(topA, botA, botB);
-                indices.push(topA, botB, topB);
-                
-                const topC = topOffset + i * (widthSegments + 1) + widthSegments;
-                const topD = topOffset + (i + 1) * (widthSegments + 1) + widthSegments;
-                const botC = bottomOffset + i * (widthSegments + 1) + widthSegments;
-                const botD = bottomOffset + (i + 1) * (widthSegments + 1) + widthSegments;
-                indices.push(topC, topD, botD);
-                indices.push(topC, botD, botC);
-            }
-            
-            for (let j = 0; j < widthSegments; j++) {
-                const topA = topOffset + j;
-                const topB = topOffset + j + 1;
-                const botA = bottomOffset + j;
-                const botB = bottomOffset + j + 1;
-                indices.push(topA, topB, botB);
-                indices.push(topA, botB, botA);
-                
-                const topC = topOffset + segments * (widthSegments + 1) + j;
-                const topD = topOffset + segments * (widthSegments + 1) + j + 1;
-                const botC = bottomOffset + segments * (widthSegments + 1) + j;
-                const botD = bottomOffset + segments * (widthSegments + 1) + j + 1;
-                indices.push(topC, botC, botD);
-                indices.push(topC, botD, topD);
-            }
-            
-            // Inner hole walls (if hole exists)
-            if (addGripHole) {
-                for (let i = 0; i < segments; i++) {
-                    for (let j = 0; j < widthSegments; j++) {
-                        const idx0 = i * (widthSegments + 1) + j;
-                        const idx1 = (i + 1) * (widthSegments + 1) + j;
-                        const idx2 = (i + 1) * (widthSegments + 1) + (j + 1);
-                        const idx3 = i * (widthSegments + 1) + (j + 1);
-                        
-                        // Add walls between hole and non-hole vertices
-                        if (isInHoleArray[idx0] !== isInHoleArray[idx1]) {
-                            const t0 = topOffset + idx0;
-                            const t1 = topOffset + idx1;
-                            const b0 = bottomOffset + idx0;
-                            const b1 = bottomOffset + idx1;
-                            if (isInHoleArray[idx0]) {
-                                indices.push(t1, b1, b0);
-                                indices.push(t1, b0, t0);
-                            } else {
-                                indices.push(t0, b0, b1);
-                                indices.push(t0, b1, t1);
-                            }
-                        }
-                        
-                        if (isInHoleArray[idx1] !== isInHoleArray[idx2]) {
-                            const t1 = topOffset + idx1;
-                            const t2 = topOffset + idx2;
-                            const b1 = bottomOffset + idx1;
-                            const b2 = bottomOffset + idx2;
-                            if (isInHoleArray[idx1]) {
-                                indices.push(t2, b2, b1);
-                                indices.push(t2, b1, t1);
-                            } else {
-                                indices.push(t1, b1, b2);
-                                indices.push(t1, b2, t2);
-                            }
-                        }
-                        
-                        if (isInHoleArray[idx2] !== isInHoleArray[idx3]) {
-                            const t2 = topOffset + idx2;
-                            const t3 = topOffset + idx3;
-                            const b2 = bottomOffset + idx2;
-                            const b3 = bottomOffset + idx3;
-                            if (isInHoleArray[idx2]) {
-                                indices.push(t3, b3, b2);
-                                indices.push(t3, b2, t2);
-                            } else {
-                                indices.push(t2, b2, b3);
-                                indices.push(t2, b3, t3);
-                            }
-                        }
-                        
-                        if (isInHoleArray[idx3] !== isInHoleArray[idx0]) {
-                            const t3 = topOffset + idx3;
-                            const t0 = topOffset + idx0;
-                            const b3 = bottomOffset + idx3;
-                            const b0 = bottomOffset + idx0;
-                            if (isInHoleArray[idx3]) {
-                                indices.push(t0, b0, b3);
-                                indices.push(t0, b3, t3);
-                            } else {
-                                indices.push(t3, b3, b0);
-                                indices.push(t3, b0, t0);
-                            }
-                        }
-                    }
-                }
-            }
-            
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-            geometry.setIndex(indices);
-            geometry.computeVertexNormals();
-            
-            return geometry;
-        }
-
+        // ===== GEOMETRY HELPERS =====
         function getShapeModifier(t, s, shape) {
             switch(shape) {
                 case 'oval':
-                    return Math.sqrt(1 - Math.pow(2 * t - 1, 2)) * 0.8 + 0.2;
+                    return Math.sqrt(Math.max(0, 1 - Math.pow(2 * t - 1, 2))) * 0.8 + 0.2;
+                case 'circle':
+                    const angle = t * Math.PI * 2;
+                    const radius = 0.5;
+                    return Math.abs(Math.cos(angle)) * radius + (1 - radius);
                 case 'teardrop':
                     return (1 - t) * 0.7 + 0.3;
                 case 'kidney':
@@ -795,6 +571,41 @@
                 default:
                     return 1;
             }
+        }
+
+        function smoothCurvePoints(points) {
+            if (points.length < 3) return points;
+            
+            // Sort points by x coordinate
+            const sorted = [...points].sort((a, b) => a.x - b.x);
+            
+            // Create smooth interpolation using Catmull-Rom
+            const smoothed = [];
+            const resolution = 100;
+            
+            for (let i = 0; i < resolution; i++) {
+                const t = i / (resolution - 1);
+                const index = Math.floor(t * (sorted.length - 1));
+                const nextIndex = Math.min(index + 1, sorted.length - 1);
+                const localT = (t * (sorted.length - 1)) - index;
+                
+                const p0 = sorted[Math.max(0, index - 1)];
+                const p1 = sorted[index];
+                const p2 = sorted[nextIndex];
+                const p3 = sorted[Math.min(sorted.length - 1, nextIndex + 1)];
+                
+                // Catmull-Rom interpolation
+                const y = 0.5 * (
+                    (2 * p1.y) +
+                    (-p0.y + p2.y) * localT +
+                    (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * localT * localT +
+                    (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * localT * localT * localT
+                );
+                
+                smoothed.push({ x: t, y: Math.max(0, Math.min(1, y)) });
+            }
+            
+            return smoothed;
         }
 
         function applyEdgeAngle(angleType, customAngle, thickness, angleEffect) {
@@ -822,24 +633,324 @@
             return topZ;
         }
 
-        function updateRib() {
-            if (appRib) {
-                appScene.remove(appRib);
+        // ===== MAIN GEOMETRY CREATION =====
+        function createRibGeometry() {
+            const params = getGeometryParameters();
+            
+            // Validate edge thickness
+            if (params.edgeThickness < 0.5) {
+                alert('Error: Edge thickness cannot be less than 0.5mm to ensure printability with standard FDM 3D printers.');
+                document.getElementById('edge-thickness').value = 0.5;
+                document.getElementById('edge-thickness-value').textContent = '0.5mm';
+                return createRibGeometry();
             }
             
-            const geometry = createRibGeometry();
-            const material = new THREE.MeshStandardMaterial({
-                color: 0xd63447,
-                roughness: 0.3,
-                metalness: 0.1,
-                side: THREE.DoubleSide,
-                vertexColors: true
-            });
+            // Optimized segment count (50x30 instead of 120x80)
+            const segments = 50;
+            const widthSegments = 30;
             
-            appRib = new THREE.Mesh(geometry, material);
-            appRib.castShadow = true;
-            appRib.receiveShadow = true;
-            appScene.add(appRib);
+            const { topVertices, bottomVertices, colors, isInHoleArray } = 
+                createVertices(params, segments, widthSegments);
+            
+            return buildGeometry(topVertices, bottomVertices, colors, isInHoleArray, segments, widthSegments);
+        }
+
+        function getGeometryParameters() {
+            return {
+                length: parseFloat(document.getElementById('length').value),
+                width: parseFloat(document.getElementById('width').value),
+                thickness: parseFloat(document.getElementById('thickness').value),
+                edgeThickness: parseFloat(document.getElementById('edge-thickness').value),
+                edgeThicknessApply: document.getElementById('edge-thickness-apply').value,
+                shape: document.getElementById('shape').value,
+                angleType: document.getElementById('angle-type').value,
+                customAngle: parseFloat(document.getElementById('edge-angle').value),
+                edgeDepth: parseFloat(document.getElementById('edge-depth').value),
+                applyAllEdges: document.getElementById('apply-all-edges').checked,
+                addGripHole: document.getElementById('add-grip-hole').checked
+            };
+        }
+
+        function createVertices(params, segments, widthSegments) {
+            const topVertices = [];
+            const bottomVertices = [];
+            const colors = [];
+            const isInHoleArray = [];
+            
+            const smoothedCurve = params.shape === 'custom' && customCurvePoints.length > 0 
+                ? smoothCurvePoints(customCurvePoints) 
+                : null;
+            
+            const holeRadius = params.addGripHole 
+                ? Math.min(params.length, params.width) * 0.12 
+                : 0;
+            
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const x = (t - 0.5) * params.length;
+                
+                for (let j = 0; j <= widthSegments; j++) {
+                    const s = j / widthSegments;
+                    const vertexData = calculateVertexPosition(
+                        x, s, t, params, smoothedCurve, holeRadius, widthSegments
+                    );
+                    
+                    topVertices.push(new THREE.Vector3(x, vertexData.y, vertexData.topZ));
+                    bottomVertices.push(new THREE.Vector3(x, vertexData.y, vertexData.bottomZ));
+                    isInHoleArray.push(vertexData.inHole);
+                    
+                    // Color vertices
+                    if (params.shape === 'custom' && j === widthSegments) {
+                        colors.push(0.2, 0.8, 0.8); // Cyan highlight for custom edge
+                        colors.push(0.2, 0.8, 0.8);
+                    } else {
+                        colors.push(0.84, 0.36, 0.46); // Primary red
+                        colors.push(0.84, 0.36, 0.46);
+                    }
+                }
+            }
+            
+            return { topVertices, bottomVertices, colors, isInHoleArray };
+        }
+
+        function calculateVertexPosition(x, s, t, params, smoothedCurve, holeRadius, widthSegments) {
+            let y = (s - 0.5) * params.width;
+            
+            // Apply shape modifier
+            let shapeModifier = 1;
+            if (smoothedCurve) {
+                const pointIndex = Math.floor(t * (smoothedCurve.length - 1));
+                const point = smoothedCurve[Math.min(pointIndex, smoothedCurve.length - 1)];
+                if (point) {
+                    const curveInfluence = s;
+                    const centerY = 0.5;
+                    const curveModifier = 1 - Math.abs(point.y - centerY) * 1.5;
+                    const clampedModifier = Math.max(0.1, Math.min(1, curveModifier));
+                    shapeModifier = 1.0 * (1 - curveInfluence) + clampedModifier * curveInfluence;
+                }
+            } else {
+                shapeModifier = getShapeModifier(t, s, params.shape);
+            }
+            
+            y *= shapeModifier;
+            
+            // Calculate edge distances
+            const actualWidth = params.width * Math.abs(shapeModifier);
+            const actualLength = params.length;
+            const distFromTop = actualWidth * (1 - s);
+            const distFromBottom = actualWidth * s;
+            const distFromLeft = actualLength * t;
+            const distFromRight = actualLength * (1 - t);
+            let minDistToEdge = Math.min(distFromTop, distFromBottom, distFromLeft, distFromRight);
+            
+            const isNearTop = distFromTop === minDistToEdge;
+            const isShapingEdge = isNearTop;
+            
+            // Apply edge thickness
+            let currentThickness = params.thickness;
+            if (minDistToEdge <= params.edgeDepth) {
+                const edgeProgress = minDistToEdge / params.edgeDepth;
+                const shouldApplyEdgeThickness = 
+                    params.edgeThicknessApply === 'all' || 
+                    (params.edgeThicknessApply === 'shaping' && isShapingEdge);
+                
+                if (shouldApplyEdgeThickness) {
+                    currentThickness = params.edgeThickness * (1 - edgeProgress) + params.thickness * edgeProgress;
+                }
+            }
+            
+            // Calculate Z positions
+            let topZ = currentThickness / 2;
+            let bottomZ = -currentThickness / 2;
+            
+            // Apply edge angle
+            if (minDistToEdge <= params.edgeDepth) {
+                const edgeProgress = minDistToEdge / params.edgeDepth;
+                const shouldApplyAngle = params.applyAllEdges || 
+                    params.shape === 'oval' || 
+                    params.shape === 'custom' ||
+                    isNearTop || 
+                    distFromBottom === minDistToEdge ||
+                    distFromLeft <= params.edgeDepth || 
+                    distFromRight <= params.edgeDepth;
+                
+                if (shouldApplyAngle) {
+                    const angleEffect = 1 - edgeProgress;
+                    topZ = applyEdgeAngle(params.angleType, params.customAngle, currentThickness, angleEffect);
+                    topZ = topZ * angleEffect + (currentThickness / 2) * (1 - angleEffect);
+                }
+            }
+            
+            // Apply grip hole with 45° bevel
+            let inHole = false;
+            if (holeRadius > 0) {
+                const distFromHoleCenter = Math.sqrt(x * x + y * y);
+                
+                if (distFromHoleCenter <= holeRadius) {
+                    const distanceFromEdge = holeRadius - distFromHoleCenter;
+                    const bevelDepth = Math.min(distanceFromEdge, currentThickness / 2);
+                    
+                    topZ = currentThickness / 2 - bevelDepth;
+                    
+                    if (distanceFromEdge > currentThickness / 2) {
+                        inHole = true;
+                    }
+                }
+            }
+            
+            return { y, topZ, bottomZ, inHole };
+        }
+
+        function buildGeometry(topVertices, bottomVertices, colors, isInHoleArray, segments, widthSegments) {
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const indices = [];
+            
+            topVertices.forEach(v => vertices.push(v.x, v.y, v.z));
+            bottomVertices.forEach(v => vertices.push(v.x, v.y, v.z));
+            
+            const topOffset = 0;
+            const bottomOffset = topVertices.length;
+            
+            // Add faces (top, bottom, sides, and hole walls)
+            addTopBottomFaces(indices, segments, widthSegments, topOffset, bottomOffset, isInHoleArray);
+            addSideFaces(indices, segments, widthSegments, topOffset, bottomOffset);
+            addHoleWalls(indices, segments, widthSegments, topOffset, bottomOffset, isInHoleArray);
+            
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            geometry.setIndex(indices);
+            geometry.computeVertexNormals();
+            
+            return geometry;
+        }
+
+        function addTopBottomFaces(indices, segments, widthSegments, topOffset, bottomOffset, isInHoleArray) {
+            for (let i = 0; i < segments; i++) {
+                for (let j = 0; j < widthSegments; j++) {
+                    const idx0 = i * (widthSegments + 1) + j;
+                    const idx1 = (i + 1) * (widthSegments + 1) + j;
+                    const idx2 = (i + 1) * (widthSegments + 1) + (j + 1);
+                    const idx3 = i * (widthSegments + 1) + (j + 1);
+                    
+                    const anyInHole = isInHoleArray[idx0] || isInHoleArray[idx1] || 
+                                     isInHoleArray[idx2] || isInHoleArray[idx3];
+                    
+                    if (!anyInHole) {
+                        // Top face
+                        indices.push(
+                            topOffset + idx0, topOffset + idx1, topOffset + idx2,
+                            topOffset + idx0, topOffset + idx2, topOffset + idx3
+                        );
+                        // Bottom face
+                        indices.push(
+                            bottomOffset + idx0, bottomOffset + idx2, bottomOffset + idx1,
+                            bottomOffset + idx0, bottomOffset + idx3, bottomOffset + idx2
+                        );
+                    }
+                }
+            }
+        }
+
+        function addSideFaces(indices, segments, widthSegments, topOffset, bottomOffset) {
+            // Left and right edges
+            for (let i = 0; i < segments; i++) {
+                const topA = topOffset + i * (widthSegments + 1);
+                const topB = topOffset + (i + 1) * (widthSegments + 1);
+                const botA = bottomOffset + i * (widthSegments + 1);
+                const botB = bottomOffset + (i + 1) * (widthSegments + 1);
+                indices.push(topA, botA, botB, topA, botB, topB);
+                
+                const topC = topOffset + i * (widthSegments + 1) + widthSegments;
+                const topD = topOffset + (i + 1) * (widthSegments + 1) + widthSegments;
+                const botC = bottomOffset + i * (widthSegments + 1) + widthSegments;
+                const botD = bottomOffset + (i + 1) * (widthSegments + 1) + widthSegments;
+                indices.push(topC, topD, botD, topC, botD, botC);
+            }
+            
+            // Front and back edges
+            for (let j = 0; j < widthSegments; j++) {
+                const topA = topOffset + j;
+                const topB = topOffset + j + 1;
+                const botA = bottomOffset + j;
+                const botB = bottomOffset + j + 1;
+                indices.push(topA, topB, botB, topA, botB, botA);
+                
+                const topC = topOffset + segments * (widthSegments + 1) + j;
+                const topD = topOffset + segments * (widthSegments + 1) + j + 1;
+                const botC = bottomOffset + segments * (widthSegments + 1) + j;
+                const botD = bottomOffset + segments * (widthSegments + 1) + j + 1;
+                indices.push(topC, botC, botD, topC, botD, topD);
+            }
+        }
+
+        function addHoleWalls(indices, segments, widthSegments, topOffset, bottomOffset, isInHoleArray) {
+            for (let i = 0; i < segments; i++) {
+                for (let j = 0; j < widthSegments; j++) {
+                    const idx0 = i * (widthSegments + 1) + j;
+                    const idx1 = (i + 1) * (widthSegments + 1) + j;
+                    const idx2 = (i + 1) * (widthSegments + 1) + (j + 1);
+                    const idx3 = i * (widthSegments + 1) + (j + 1);
+                    
+                    const edges = [
+                        [idx0, idx1], [idx1, idx2], [idx2, idx3], [idx3, idx0]
+                    ];
+                    
+                    edges.forEach(([a, b]) => {
+                        if (isInHoleArray[a] !== isInHoleArray[b]) {
+                            const t0 = topOffset + a;
+                            const t1 = topOffset + b;
+                            const b0 = bottomOffset + a;
+                            const b1 = bottomOffset + b;
+                            
+                            if (isInHoleArray[a]) {
+                                indices.push(t1, b1, b0, t1, b0, t0);
+                            } else {
+                                indices.push(t0, b0, b1, t0, b1, t1);
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        // ===== UPDATE FUNCTIONS =====
+        function updateRib() {
+            // Show loading overlay for complex geometries
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.classList.add('show');
+            
+            // Use timeout to allow loading overlay to show
+            setTimeout(() => {
+                try {
+                    if (appRib) {
+                        appScene.remove(appRib);
+                        appRib.geometry.dispose();
+                        appRib.material.dispose();
+                    }
+                    
+                    const geometry = createRibGeometry();
+                    const material = new THREE.MeshStandardMaterial({
+                        color: 0xd63447,
+                        roughness: 0.4,
+                        metalness: 0.2,
+                        side: THREE.DoubleSide,
+                        vertexColors: true
+                    });
+                    
+                    appRib = new THREE.Mesh(geometry, material);
+                    appRib.castShadow = true;
+                    appRib.receiveShadow = true;
+                    appScene.add(appRib);
+                } finally {
+                    loadingOverlay.classList.remove('show');
+                }
+            }, 10);
+        }
+
+        function debouncedUpdate() {
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(updateRib, 100);
         }
 
         function animate() {
@@ -847,95 +958,13 @@
             appRenderer.render(appScene, appCamera);
         }
 
+        // ===== DRAWING CANVAS =====
         const drawingCanvas = document.getElementById('drawing-canvas');
         const ctx = drawingCanvas.getContext('2d');
 
-        drawingCanvas.addEventListener('mousedown', (e) => {
-            isDrawing = true;
-            customCurvePoints = [];
-            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-            drawGrid();
-        });
-
-        function exportSVG() {
-            // Create SVG representation (top-down view)
-            const geometry = appRib.geometry;
-            const vertices = geometry.attributes.position.array;
-            const indices = geometry.index.array;
-            
-            // Find bounds for scaling
-            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-            for (let i = 0; i < vertices.length; i += 3) {
-                minX = Math.min(minX, vertices[i]);
-                maxX = Math.max(maxX, vertices[i]);
-                minY = Math.min(minY, vertices[i + 1]);
-                maxY = Math.max(maxY, vertices[i + 1]);
-            }
-            
-            const width = maxX - minX;
-            const height = maxY - minY;
-            const scale = 2;
-            const svgWidth = width * scale + 20;
-            const svgHeight = height * scale + 20;
-            
-            let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
-  <rect width="100%" height="100%" fill="white"/>
-  <g transform="translate(${10 - minX * scale}, ${10 - minY * scale})">
-`;
-            
-            // Draw outline
-            const outlinePoints = [];
-            for (let i = 0; i < vertices.length; i += 3) {
-                if (vertices[i + 2] > 0) { // Top surface only
-                    outlinePoints.push({
-                        x: vertices[i] * scale,
-                        y: vertices[i + 1] * scale
-                    });
-                }
-            }
-            
-            if (outlinePoints.length > 0) {
-                svgContent += `    <polygon points="`;
-                outlinePoints.forEach((p, idx) => {
-                    if (idx % 10 === 0) { // Sample points to reduce file size
-                        svgContent += `${p.x},${p.y} `;
-                    }
-                });
-                svgContent += `" fill="#d63447" stroke="#000" stroke-width="1"/>
-`;
-            }
-            
-            svgContent += `  </g>
-</svg>`;
-            
-            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'pottery_rib.svg';
-            link.click();
-        }
-
-        drawingCanvas.addEventListener('mousemove', (e) => {
-            if (!isDrawing) return;
-            
-            const rect = drawingCanvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / drawingCanvas.width;
-            const y = (e.clientY - rect.top) / drawingCanvas.height;
-            
-            customCurvePoints.push({ x, y });
-            
-            ctx.fillStyle = '#0066cc';
-            ctx.fillRect((e.clientX - rect.left) - 3, (e.clientY - rect.top) - 3, 6, 6);
-        });
-
-        drawingCanvas.addEventListener('mouseup', () => {
-            isDrawing = false;
-        });
-
         function drawGrid() {
             ctx.strokeStyle = '#f9d96b';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1;
             
             for (let i = 0; i <= 10; i++) {
                 ctx.beginPath();
@@ -948,7 +977,57 @@
                 ctx.lineTo(i * drawingCanvas.width / 10, drawingCanvas.height);
                 ctx.stroke();
             }
+            
+            // Center line
+            ctx.strokeStyle = '#0066cc';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, drawingCanvas.height / 2);
+            ctx.lineTo(drawingCanvas.width, drawingCanvas.height / 2);
+            ctx.stroke();
+            
+            // Instructions
+            ctx.fillStyle = '#0066cc';
+            ctx.font = 'bold 14px Nunito';
+            ctx.textAlign = 'center';
+            ctx.fillText('Draw from left to right', drawingCanvas.width / 2, 20);
         }
+
+        drawingCanvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            customCurvePoints = [];
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            drawGrid();
+        });
+
+        drawingCanvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            
+            const rect = drawingCanvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / drawingCanvas.width;
+            const y = (e.clientY - rect.top) / drawingCanvas.height;
+            
+            customCurvePoints.push({ x, y });
+            
+            // Draw smooth line instead of dots
+            if (customCurvePoints.length > 1) {
+                const prevPoint = customCurvePoints[customCurvePoints.length - 2];
+                const currPoint = customCurvePoints[customCurvePoints.length - 1];
+                
+                ctx.strokeStyle = '#0066cc';
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                ctx.moveTo(prevPoint.x * drawingCanvas.width, prevPoint.y * drawingCanvas.height);
+                ctx.lineTo(currPoint.x * drawingCanvas.width, currPoint.y * drawingCanvas.height);
+                ctx.stroke();
+            }
+        });
+
+        drawingCanvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
 
         function clearDrawing() {
             ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
@@ -957,16 +1036,88 @@
         }
 
         function applyCustomCurve() {
-            if (customCurvePoints.length > 0) {
+            if (customCurvePoints.length > 5) {
                 updateRib();
                 closeDrawingModal();
             } else {
-                alert('Please draw a curve first!');
+                alert('Please draw a longer curve (draw from left to right across the canvas)!');
             }
         }
 
         function closeDrawingModal() {
             document.getElementById('drawing-modal').classList.remove('show');
+        }
+
+        // ===== EXPORT FUNCTIONS =====
+        function exportSVG() {
+            const geometry = appRib.geometry;
+            const vertices = geometry.attributes.position.array;
+            const params = getGeometryParameters();
+            
+            // Find bounds
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            for (let i = 0; i < vertices.length; i += 3) {
+                if (vertices[i + 2] > 0) { // Top surface only
+                    minX = Math.min(minX, vertices[i]);
+                    maxX = Math.max(maxX, vertices[i]);
+                    minY = Math.min(minY, vertices[i + 1]);
+                    maxY = Math.max(maxY, vertices[i + 1]);
+                }
+            }
+            
+            const width = maxX - minX;
+            const height = maxY - minY;
+            const scale = 2;
+            const padding = 20;
+            const svgWidth = width * scale + padding * 2;
+            const svgHeight = height * scale + padding * 2;
+            
+            let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+  <rect width="100%" height="100%" fill="white"/>
+  <g transform="translate(${padding - minX * scale}, ${padding - minY * scale})">
+`;
+            
+            // Draw outline
+            const outlinePoints = [];
+            for (let i = 0; i < vertices.length; i += 3) {
+                if (vertices[i + 2] > 0) {
+                    outlinePoints.push({
+                        x: vertices[i] * scale,
+                        y: vertices[i + 1] * scale
+                    });
+                }
+            }
+            
+            if (outlinePoints.length > 0) {
+                svgContent += `    <polygon points="`;
+                outlinePoints.forEach((p, idx) => {
+                    if (idx % 5 === 0) {
+                        svgContent += `${p.x.toFixed(2)},${p.y.toFixed(2)} `;
+                    }
+                });
+                svgContent += `" fill="none" stroke="#d63447" stroke-width="2"/>
+`;
+            }
+            
+            // Add grip hole if present
+            if (params.addGripHole) {
+                const holeRadius = Math.min(params.length, params.width) * 0.12 * scale;
+                svgContent += `    <circle cx="0" cy="0" r="${holeRadius.toFixed(2)}" fill="none" stroke="#0066cc" stroke-width="2" stroke-dasharray="5,5"/>
+`;
+            }
+            
+            svgContent += `  </g>
+</svg>`;
+            
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'pottery_rib.svg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
         }
 
         function exportSTL() {
@@ -990,11 +1141,11 @@
                     new THREE.Vector3().subVectors(v3, v1)
                 ).normalize();
                 
-                output += `  facet normal ${normal.x} ${normal.y} ${normal.z}\n`;
+                output += `  facet normal ${normal.x.toFixed(6)} ${normal.y.toFixed(6)} ${normal.z.toFixed(6)}\n`;
                 output += '    outer loop\n';
-                output += `      vertex ${v1.x} ${v1.y} ${v1.z}\n`;
-                output += `      vertex ${v2.x} ${v2.y} ${v2.z}\n`;
-                output += `      vertex ${v3.x} ${v3.y} ${v3.z}\n`;
+                output += `      vertex ${v1.x.toFixed(6)} ${v1.y.toFixed(6)} ${v1.z.toFixed(6)}\n`;
+                output += `      vertex ${v2.x.toFixed(6)} ${v2.y.toFixed(6)} ${v2.z.toFixed(6)}\n`;
+                output += `      vertex ${v3.x.toFixed(6)} ${v3.y.toFixed(6)} ${v3.z.toFixed(6)}\n`;
                 output += '    endloop\n';
                 output += '  endfacet\n';
             }
@@ -1005,7 +1156,10 @@
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = 'pottery_rib.stl';
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
         }
 
         function exportOBJ() {
@@ -1014,10 +1168,13 @@
             const indices = geometry.index.array;
             
             let output = '# Pottery Rib\n';
+            output += '# Generated by Pottery Rib Customizer\n\n';
             
             for (let i = 0; i < vertices.length; i += 3) {
-                output += `v ${vertices[i]} ${vertices[i + 1]} ${vertices[i + 2]}\n`;
+                output += `v ${vertices[i].toFixed(6)} ${vertices[i + 1].toFixed(6)} ${vertices[i + 2].toFixed(6)}\n`;
             }
+            
+            output += '\n';
             
             for (let i = 0; i < indices.length; i += 3) {
                 output += `f ${indices[i] + 1} ${indices[i + 1] + 1} ${indices[i + 2] + 1}\n`;
@@ -1027,39 +1184,43 @@
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = 'pottery_rib.obj';
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
         }
 
+        // ===== EVENT LISTENERS =====
         document.getElementById('length').addEventListener('input', (e) => {
             document.getElementById('length-value').textContent = e.target.value + 'mm';
-            updateRib();
+            debouncedUpdate();
         });
 
         document.getElementById('width').addEventListener('input', (e) => {
             document.getElementById('width-value').textContent = e.target.value + 'mm';
-            updateRib();
+            debouncedUpdate();
         });
 
         document.getElementById('thickness').addEventListener('input', (e) => {
             document.getElementById('thickness-value').textContent = e.target.value + 'mm';
-            updateRib();
+            debouncedUpdate();
         });
 
         document.getElementById('edge-thickness').addEventListener('input', (e) => {
             document.getElementById('edge-thickness-value').textContent = e.target.value + 'mm';
-            updateRib();
+            debouncedUpdate();
         });
 
-        document.getElementById('edge-thickness-apply').addEventListener('change', updateRib);
+        document.getElementById('edge-thickness-apply').addEventListener('change', debouncedUpdate);
 
         document.getElementById('edge-angle').addEventListener('input', (e) => {
             document.getElementById('angle-value').textContent = e.target.value + '°';
-            updateRib();
+            debouncedUpdate();
         });
 
         document.getElementById('edge-depth').addEventListener('input', (e) => {
             document.getElementById('edge-depth-value').textContent = e.target.value + 'mm';
-            updateRib();
+            debouncedUpdate();
         });
 
         document.getElementById('shape').addEventListener('change', (e) => {
@@ -1071,19 +1232,20 @@
                 drawGrid();
             } else {
                 customShapeInfo.style.display = 'none';
-                updateRib();
+                debouncedUpdate();
             }
         });
         
-        document.getElementById('apply-all-edges').addEventListener('change', updateRib);
-        document.getElementById('add-grip-hole').addEventListener('change', updateRib);
+        document.getElementById('apply-all-edges').addEventListener('change', debouncedUpdate);
+        document.getElementById('add-grip-hole').addEventListener('change', debouncedUpdate);
         
         document.getElementById('angle-type').addEventListener('change', (e) => {
             const customAngleControl = document.getElementById('custom-angle-control');
             customAngleControl.style.display = e.target.value === 'custom-angle' ? 'block' : 'none';
-            updateRib();
+            debouncedUpdate();
         });
 
+        // ===== INITIALIZATION =====
         window.addEventListener('load', () => {
             initScene();
             drawGrid();
