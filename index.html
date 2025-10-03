@@ -241,7 +241,7 @@
     <div class="header">
         <div class="container">
             <h1>Pottery Rib Customizer</h1>
-            <div class="subtitle">Make your own custom pottery rib! Play around with the different features to generate a 3D model that you can download and 3D print.</div>
+            <div class="subtitle">Make your own custom pottery rib! Play around with the different features to generate a 3D model. If you want to 3D print the model, choose .STL or .OBJ when downloading. If you prefer to use a lasercutter to create your ribs, choose .SVG, but keep in mind that you will have to sand or shape the rib to include the bevel you desire!</div>
         </div>
     </div>
 
@@ -384,7 +384,7 @@
     <div id="drawing-modal">
         <div class="drawing-container">
             <h5 class="mb-3">Draw Your Custom Shaping Edge</h5>
-            <p class="text-muted">Draw the shaping edge of your pottery rib from left to right. The opposite edge will remain straight.</p>
+            <p class="text-muted">Draw a smooth curve from left to right across the canvas. This will define the shape of your pottery rib's top edge.</p>
             <canvas id="drawing-canvas" width="500" height="300"></canvas>
             <div class="d-grid gap-2 mt-3">
                 <button class="btn btn-primary" onclick="applyCustomCurve()">
@@ -494,8 +494,8 @@
                 return createRibGeometry();
             }
             
-            const segments = 50;
-            const widthSegments = 30;
+            const segments = 120;
+            const widthSegments = 80;
             
             // Grip hole parameters
             let holeRadius = 0;
