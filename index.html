@@ -4,37 +4,571 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pottery Rib Customizer</title>
-    
-    <!-- External CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="css/styles.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+        :root {
+            --primary-red: #d63447;
+            --primary-blue: #0066cc;
+            --primary-yellow: #f4c430;
+            --bright-red: #e85d75;
+            --bright-blue: #3399ff;
+            --bright-yellow: #f9d96b;
+        }
+
+        body {
+            font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bright-yellow) 0%, var(--primary-yellow) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--bright-red) 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            height: fit-content;
+            border: 4px solid var(--primary-blue);
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+        }
+
+        .viewer-container {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            border: 4px solid var(--primary-red);
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%);
+            position: relative;
+        }
+
+        .view-thumbnails {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .view-thumbnail {
+            aspect-ratio: 1;
+            border: 3px solid var(--primary-blue);
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .view-thumbnail:hover {
+            border-color: var(--primary-red);
+            transform: scale(1.05);
+        }
+
+        .view-thumbnail.active {
+            border-color: var(--primary-red);
+            box-shadow: 0 0 15px rgba(214, 52, 71, 0.5);
+        }
+
+        .view-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.25rem;
+            text-align: center;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+        }
+
+        .control-group label {
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-header {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--primary-red);
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--bright-yellow);
+        }
+
+        .form-range {
+            accent-color: var(--primary-red);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--bright-blue) 100%);
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 25px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 15px rgba(0, 102, 204, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 102, 204, 0.6);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0, 102, 204, 0.3);
+        }
+
+        .btn-outline-secondary {
+            border: 3px solid var(--primary-red);
+            color: var(--primary-red);
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(214, 52, 71, 0.2);
+        }
+
+        .btn-outline-secondary:hover {
+            background: var(--primary-red);
+            color: white;
+            transform: translateY(-4px);
+            box-shadow: 0 6px 15px rgba(214, 52, 71, 0.4);
+        }
+
+        .btn-outline-secondary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(214, 52, 71, 0.2);
+        }
+
+        .btn-sm {
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .form-select {
+            border-radius: 10px;
+            border: 3px solid var(--primary-blue);
+            padding: 0.6rem;
+            font-weight: 600;
+        }
+
+        .form-select:focus {
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 0.2rem rgba(214, 52, 71, 0.25);
+        }
+
+        .value-display {
+            display: inline-block;
+            background: var(--bright-yellow);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--primary-blue);
+            font-weight: 700;
+            border: 2px solid var(--primary-blue);
+        }
+
+        .warning-text {
+            color: #dc3545;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .warning-text.show {
+            display: block;
+        }
+
+        .modal-custom {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-custom.show {
+            display: flex;
+        }
+
+        .modal-container {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 4px solid var(--primary-red);
+        }
+
+        #drawing-canvas {
+            border: 4px solid var(--primary-blue);
+            border-radius: 15px;
+            cursor: crosshair;
+            display: block;
+            margin: 1rem auto;
+            background: white;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .preset-card {
+            border: 3px solid var(--primary-blue);
+            border-radius: 15px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            background: white;
+        }
+
+        .preset-card:hover {
+            border-color: var(--primary-red);
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(214, 52, 71, 0.3);
+        }
+
+        .preset-card.active {
+            border-color: var(--primary-red);
+            background: #fff5f5;
+        }
+
+        .preset-name {
+            font-weight: 700;
+            color: var(--primary-blue);
+            font-size: 0.9rem;
+        }
+
+        .preset-desc {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .info-text {
+            font-size: 0.85rem;
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .stats-panel {
+            background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%);
+            border-radius: 15px;
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 3px solid var(--primary-blue);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--primary-red);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            border: 4px solid var(--bright-yellow);
+            border-top: 4px solid var(--primary-red);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        .canvas-instructions {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+            pointer-events: none;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #fff9e6;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bright-yellow);
+            border-radius: 10px;
+            border: 2px solid #fff9e6;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-yellow);
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--bright-yellow) #fff9e6;
+        }
+
+        .input-with-slider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .input-with-slider input[type="number"] {
+            width: 80px;
+            padding: 0.5rem;
+            border: 3px solid var(--primary-blue);
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .input-with-slider input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 0.2rem rgba(214, 52, 71, 0.25);
+        }
+
+        .input-with-slider input[type="range"] {
+            flex: 1;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 3px solid var(--primary-blue);
+            border-radius: 15px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .toast-notification.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .collapsible-section {
+            margin-bottom: 1rem;
+        }
+
+        .collapsible-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            color: var(--primary-yellow);
+            transition: all 0.3s;
+        }
+
+        .collapsible-header:hover {
+            color: #e6b800;
+        }
+
+        .collapsible-header i {
+            font-size: 0.85rem;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible-content.open {
+            max-height: 2000px;
+        }
+
+        .edge-thickness-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .edge-control {
+            background: #f8f9fa;
+            padding: 0.75rem;
+            border-radius: 10px;
+            border: 2px solid var(--primary-blue);
+        }
+
+        .edge-control-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+    </style>
 </head>
 <body>
-    <!-- Header Section -->
     <div class="header">
         <div class="container">
             <h1>Pottery Rib Customizer</h1>
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div class="toast-notification" id="toast">
         <div id="toast-message"></div>
     </div>
 
-    <!-- Main Content -->
     <div class="container">
         <div class="row">
-            <!-- Left Column: Controls -->
             <div class="col-lg-4 mb-4">
                 <div class="control-panel">
                     <h5 class="mb-3">Customize Your Rib</h5>
 
-                    <!-- Quick Presets Section -->
+                    <!-- Shape Presets -->
                     <div class="collapsible-section">
                         <div class="collapsible-header" onclick="toggleSection('presets')">
-                            <span>Do you want to start with a quick preset? <i class="fas fa-chevron-down" id="presets-icon"></i></span>
+                            <span>Do you want to start with a quick preset?</span>
+                            <i class="fas fa-chevron-down" id="presets-icon"></i>
                         </div>
                         <div class="collapsible-content" id="presets-content">
                             <div class="preset-grid">
@@ -66,36 +600,40 @@
                         </div>
                     </div>
 
-                    <!-- Basic Dimensions Section -->
-                    <div class="section-header">Basic Dimensions</div>
+                    <!-- Basic Dimensions -->
+                    <div class="section-header">
+                        Basic Dimensions
+                    </div>
 
-                    <!-- Length Control -->
                     <div class="control-group">
-                        <label>Length <span class="value-display" id="length-value">100mm</span></label>
+                        <label>
+                            Length <span class="value-display" id="length-value">100mm</span>
+                        </label>
                         <div class="input-with-slider">
                             <input type="number" id="length-input" min="50" max="200" value="100" step="5">
                             <input type="range" class="form-range" id="length" min="50" max="200" value="100" step="5">
                         </div>
                     </div>
 
-                    <!-- Width Control -->
                     <div class="control-group">
-                        <label>Width <span class="value-display" id="width-value">60mm</span></label>
+                        <label>
+                            Width <span class="value-display" id="width-value">60mm</span>
+                        </label>
                         <div class="input-with-slider">
                             <input type="number" id="width-input" min="30" max="100" value="60" step="5">
                             <input type="range" class="form-range" id="width" min="30" max="100" value="60" step="5">
                         </div>
                     </div>
 
-                    <!-- Thickness Control with Suggestions -->
                     <div class="control-group">
-                        <label>Thickness <span class="value-display" id="thickness-value">6mm</span></label>
+                        <label>
+                            Thickness <span class="value-display" id="thickness-value">6mm</span>
+                        </label>
                         <div class="input-with-slider">
                             <input type="number" id="thickness-input" min="3" max="12" value="6" step="0.5">
                             <input type="range" class="form-range" id="thickness" min="3" max="12" value="6" step="0.5">
                         </div>
                         
-                        <!-- Thickness Suggestions Collapsible -->
                         <div class="collapsible-section mt-2">
                             <div class="collapsible-header" onclick="toggleSection('thickness-suggestions')">
                                 <span>Looking for suggestions? <i class="fas fa-chevron-down" id="thickness-suggestions-icon"></i></span>
@@ -116,8 +654,10 @@
                         </div>
                     </div>
 
-                    <!-- Overall Shape Section -->
-                    <div class="section-header">Overall Shape</div>
+                    <!-- Overall Shape -->
+                    <div class="section-header">
+                        Overall Shape
+                    </div>
 
                     <div class="control-group">
                         <label>Shape Type</label>
@@ -137,9 +677,10 @@
                         </div>
                     </div>
 
-                    <!-- Longitudinal Curve Control -->
                     <div class="control-group">
-                        <label>Longitudinal Curve <span class="value-display" id="longitudinal-curve-value">0%</span></label>
+                        <label>
+                            Longitudinal Curve <span class="value-display" id="longitudinal-curve-value">0%</span>
+                        </label>
                         <div class="input-with-slider">
                             <input type="number" id="longitudinal-curve-input" min="0" max="100" value="0" step="5">
                             <input type="range" class="form-range" id="longitudinal-curve" min="0" max="100" value="0" step="5">
@@ -147,12 +688,15 @@
                         <div class="info-text">Bends the rib lengthwise (like a slight bow) to help it conform to curved pottery surfaces</div>
                     </div>
 
-                    <!-- Edge Properties Section -->
-                    <div class="section-header">Edge Properties</div>
+                    <!-- Edge Properties -->
+                    <div class="section-header">
+                        Edge Properties
+                    </div>
 
-                    <!-- Edge Thickness Control -->
                     <div class="control-group">
-                        <label>Edge Thickness <span class="value-display" id="edge-thickness-value">6mm</span></label>
+                        <label>
+                            Edge Thickness <span class="value-display" id="edge-thickness-value">6mm</span>
+                        </label>
                         <div class="input-with-slider">
                             <input type="number" id="edge-thickness-input" min="0.1" max="12" value="6" step="0.1">
                             <input type="range" class="form-range" id="edge-thickness" min="0.1" max="12" value="6" step="0.1">
@@ -163,7 +707,6 @@
                         </div>
                     </div>
 
-                    <!-- Edge Thickness Application -->
                     <div class="control-group">
                         <label>Edge Thickness</label>
                         <select class="form-select" id="edge-thickness-apply">
@@ -173,7 +716,6 @@
                         </select>
                     </div>
 
-                    <!-- Asymmetric Edge Thickness Controls -->
                     <div id="asymmetric-controls" style="display: none;">
                         <div class="edge-thickness-grid">
                             <div class="edge-control">
@@ -195,7 +737,6 @@
                         </div>
                     </div>
 
-                    <!-- Edge Profile Type -->
                     <div class="control-group">
                         <label>Edge Profile Type</label>
                         <select class="form-select" id="angle-type">
@@ -209,16 +750,16 @@
                         </select>
                     </div>
 
-                    <!-- Custom Angle Control -->
                     <div class="control-group" id="custom-angle-control" style="display: none;">
-                        <label>Edge Angle <span class="value-display" id="angle-value">45°</span></label>
+                        <label>
+                            Edge Angle <span class="value-display" id="angle-value">45°</span>
+                        </label>
                         <div class="input-with-slider">
                             <input type="number" id="edge-angle-input" min="0" max="90" value="45" step="5">
                             <input type="range" class="form-range" id="edge-angle" min="0" max="90" value="45" step="5">
                         </div>
                     </div>
 
-                    <!-- Asymmetric Angle Controls -->
                     <div id="asymmetric-angle-controls" style="display: none;">
                         <div class="edge-thickness-grid">
                             <div class="edge-control">
@@ -264,9 +805,10 @@
                         </div>
                     </div>
 
-                    <!-- Edge Depth Control -->
                     <div class="control-group">
-                        <label>Edge Depth <span class="value-display" id="edge-depth-value">10mm</span></label>
+                        <label>
+                            Edge Depth <span class="value-display" id="edge-depth-value">10mm</span>
+                        </label>
                         <div class="input-with-slider">
                             <input type="number" id="edge-depth-input" min="3" max="30" value="10" step="1">
                             <input type="range" class="form-range" id="edge-depth" min="3" max="30" value="10" step="1">
@@ -277,7 +819,6 @@
                         </div>
                     </div>
 
-                    <!-- Apply to All Edges Checkbox -->
                     <div class="control-group">
                         <label>
                             <input type="checkbox" id="apply-all-edges" checked style="margin-right: 0.5rem;">
@@ -337,18 +878,19 @@
                 </div>
             </div>
 
-            <!-- Right Column: 3D Preview -->
             <div class="col-lg-8">
                 <div class="viewer-container">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0">3D Preview</h5>
                         <div>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleGrid()">Grid</button>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="resetCamera()">Reset View</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleGrid()">
+                                Grid
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="resetCamera()">
+                                Reset View
+                            </button>
                         </div>
                     </div>
-                    
-                    <!-- Canvas Container -->
                     <div id="canvas-container">
                         <div class="loading-overlay" id="loading-overlay">
                             <div class="spinner"></div>
@@ -359,7 +901,7 @@
                         </div>
                     </div>
 
-                    <!-- View Thumbnails -->
+                    <!-- Multiple View Thumbnails -->
                     <div class="view-thumbnails">
                         <div class="view-thumbnail active" id="view-3d" onclick="switchView('3d')">
                             <canvas id="thumb-3d"></canvas>
@@ -419,13 +961,13 @@
             <h5 class="mb-3">Draw Your Custom Shaping Edge</h5>
             <p class="text-muted">Draw a smooth curve from left to right. This defines your rib's top edge shape.</p>
             
-            <!-- Smoothing Control -->
             <div class="mb-3">
-                <label>Smoothing Amount <span class="value-display" id="smoothing-value">50%</span></label>
+                <label>
+                    Smoothing Amount <span class="value-display" id="smoothing-value">50%</span>
+                </label>
                 <input type="range" class="form-range" id="smoothing-amount" min="0" max="100" value="50" step="5">
             </div>
 
-            <!-- Symmetry Guide Checkbox -->
             <div class="mb-2">
                 <label>
                     <input type="checkbox" id="symmetry-guide" checked style="margin-right: 0.5rem;">
@@ -433,26 +975,1031 @@
                 </label>
             </div>
 
-            <!-- Drawing Canvas -->
             <canvas id="drawing-canvas" width="500" height="300"></canvas>
             
-            <!-- Drawing Modal Buttons -->
             <div class="d-grid gap-2 mt-3">
-                <button class="btn btn-primary" onclick="applyCustomCurve()">Apply Shape</button>
+                <button class="btn btn-primary" onclick="applyCustomCurve()">
+                    Apply Shape
+                </button>
                 <div class="action-buttons">
-                    <button class="btn btn-outline-secondary" onclick="undoDrawing()">Undo</button>
-                    <button class="btn btn-outline-secondary" onclick="clearDrawing()">Clear</button>
+                    <button class="btn btn-outline-secondary" onclick="undoDrawing()">
+                        Undo
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="clearDrawing()">
+                        Clear
+                    </button>
                 </div>
-                <button class="btn btn-outline-secondary" onclick="closeDrawingModal()">Cancel</button>
+                <button class="btn btn-outline-secondary" onclick="closeDrawingModal()">
+                    Cancel
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- External JavaScript Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Custom JavaScript -->
-    <script src="js/app.js"></script>
+    <script>
+        // ===== GLOBAL VARIABLES =====
+        let appScene, appCamera, appRenderer, appRib;
+        let thumbRenderers = {};
+        let customCurvePoints = [];
+        let drawingHistory = [];
+        let isDrawing = false;
+        let updateTimeout = null;
+        let currentView = '3d';
+        let showGrid = false;
+
+        // ===== INITIALIZATION =====
+        function initScene() {
+            const container = document.getElementById('canvas-container');
+            
+            appScene = new THREE.Scene();
+            appScene.background = new THREE.Color(0xe6f2ff);
+            
+            appCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            resetCameraPosition();
+            
+            appRenderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: true
+            });
+            appRenderer.setSize(container.clientWidth, container.clientHeight);
+            appRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(appRenderer.domElement);
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            appScene.add(ambientLight);
+            
+            const mainLight = new THREE.DirectionalLight(0xffffff, 0.6);
+            mainLight.position.set(100, 150, 100);
+            appScene.add(mainLight);
+            
+            const fillLight = new THREE.DirectionalLight(0x99ccff, 0.4);
+            fillLight.position.set(-80, 50, -80);
+            appScene.add(fillLight);
+            
+            const rimLight = new THREE.DirectionalLight(0xffeeaa, 0.3);
+            rimLight.position.set(0, -30, 50);
+            appScene.add(rimLight);
+            
+            const backLight = new THREE.DirectionalLight(0xffffff, 0.2);
+            backLight.position.set(0, 30, -100);
+            appScene.add(backLight);
+            
+            initThumbnails();
+            setupOrbitControls();
+            updateRib();
+            animate();
+        }
+
+        function resetCameraPosition() {
+            appCamera.position.set(80, 80, 120);
+            appCamera.lookAt(0, 0, 0);
+        }
+
+        function resetCamera() {
+            resetCameraPosition();
+            if (appRib) {
+                appRib.rotation.set(0, 0, 0);
+            }
+        }
+
+        function initThumbnails() {
+            const thumbIds = ['thumb-3d', 'thumb-top', 'thumb-side', 'thumb-cross'];
+            thumbIds.forEach(id => {
+                const canvas = document.getElementById(id);
+                const parent = canvas.parentElement;
+                canvas.width = parent.clientWidth;
+                canvas.height = parent.clientHeight;
+                
+                const renderer = new THREE.WebGLRenderer({ 
+                    canvas: canvas,
+                    antialias: true,
+                    alpha: true
+                });
+                renderer.setSize(canvas.width, canvas.height);
+                thumbRenderers[id] = renderer;
+            });
+        }
+
+        function setupOrbitControls() {
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            
+            appRenderer.domElement.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+                appRenderer.domElement.style.cursor = 'grabbing';
+            });
+            
+            appRenderer.domElement.addEventListener('mousemove', (e) => {
+                if (isDragging && appRib) {
+                    const deltaX = e.clientX - previousMousePosition.x;
+                    const deltaY = e.clientY - previousMousePosition.y;
+                    
+                    if (currentView === '3d') {
+                        appRib.rotation.y += deltaX * 0.01;
+                        appRib.rotation.x += deltaY * 0.01;
+                        appRib.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, appRib.rotation.x));
+                    }
+                    
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                appRenderer.domElement.style.cursor = 'grab';
+            });
+            
+            appRenderer.domElement.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomSpeed = 0.1;
+                appCamera.position.z += e.deltaY * zoomSpeed;
+                appCamera.position.z = Math.max(50, Math.min(300, appCamera.position.z));
+            }, { passive: false });
+            
+            appRenderer.domElement.style.cursor = 'grab';
+        }
+
+        // ===== VIEW SWITCHING =====
+        function switchView(view) {
+            currentView = view;
+            
+            document.querySelectorAll('.view-thumbnail').forEach(t => t.classList.remove('active'));
+            document.getElementById('view-' + view).classList.add('active');
+            
+            if (!appRib) return;
+            
+            appRib.rotation.set(0, 0, 0);
+            
+            switch(view) {
+                case 'top':
+                    appCamera.position.set(0, 200, 0);
+                    appCamera.lookAt(0, 0, 0);
+                    break;
+                case 'side':
+                    appCamera.position.set(200, 0, 0);
+                    appCamera.lookAt(0, 0, 0);
+                    break;
+                case 'cross':
+                    appCamera.position.set(0, 0, 200);
+                    appCamera.lookAt(0, 0, 0);
+                    break;
+                default:
+                    resetCameraPosition();
+            }
+        }
+
+        function updateThumbnails() {
+            if (!appRib) return;
+            
+            const views = [
+                { id: 'thumb-3d', pos: [80, 80, 120] },
+                { id: 'thumb-top', pos: [0, 150, 0] },
+                { id: 'thumb-side', pos: [150, 0, 0] },
+                { id: 'thumb-cross', pos: [0, 0, 150] }
+            ];
+            
+            const tempScene = new THREE.Scene();
+            tempScene.background = new THREE.Color(0xe6f2ff);
+            tempScene.add(appRib.clone());
+            
+            const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
+            tempScene.add(ambLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            dirLight.position.set(50, 50, 50);
+            tempScene.add(dirLight);
+            
+            views.forEach(view => {
+                const renderer = thumbRenderers[view.id];
+                const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+                camera.position.set(...view.pos);
+                camera.lookAt(0, 0, 0);
+                renderer.render(tempScene, camera);
+            });
+        }
+
+        // ===== GEOMETRY HELPERS =====
+        function getShapeModifier(t, s, shape) {
+            switch(shape) {
+                case 'oval':
+                    return Math.sqrt(Math.max(0, 1 - Math.pow(2 * t - 1, 2))) * 0.8 + 0.2;
+                case 'circle':
+                    return Math.sqrt(Math.max(0, 1 - Math.pow(2 * t - 1, 2))) * 0.9 + 0.1;
+                case 'teardrop':
+                    return (1 - t) * 0.7 + 0.3;
+                case 'kidney':
+                    return 1 - Math.abs(Math.sin(t * Math.PI)) * 0.4 * Math.abs(s - 0.5) * 2;
+                case 'asymmetric-teardrop':
+                    const asymFactor = s < 0.5 ? 0.8 : 1.2;
+                    return ((1 - t) * 0.7 + 0.3) * asymFactor;
+                default:
+                    return 1;
+            }
+        }
+
+        function smoothCurvePoints(points, smoothingFactor = 50) {
+            if (points.length < 3) return points;
+            
+            const sorted = [...points].sort((a, b) => a.x - b.x);
+            const smoothed = [];
+            const resolution = 100;
+            const tension = smoothingFactor / 100;
+            
+            for (let i = 0; i < resolution; i++) {
+                const t = i / (resolution - 1);
+                const index = Math.floor(t * (sorted.length - 1));
+                const nextIndex = Math.min(index + 1, sorted.length - 1);
+                const localT = (t * (sorted.length - 1)) - index;
+                
+                const p0 = sorted[Math.max(0, index - 1)];
+                const p1 = sorted[index];
+                const p2 = sorted[nextIndex];
+                const p3 = sorted[Math.min(sorted.length - 1, nextIndex + 1)];
+                
+                const y = 0.5 * (
+                    (2 * p1.y) +
+                    (-p0.y + p2.y) * localT * tension +
+                    (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * localT * localT * tension +
+                    (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * localT * localT * localT * tension
+                );
+                
+                smoothed.push({ x: t, y: Math.max(0, Math.min(1, y)) });
+            }
+            
+            return smoothed;
+        }
+
+        function applyEdgeAngle(angleType, customAngle, thickness, angleEffect) {
+            let topZ = thickness / 2;
+            
+            if (angleType === 'straight') {
+                return topZ;
+            } else if (angleType === 'sharp') {
+                topZ = Math.max(0.1, thickness / 2 * (1 - angleEffect * 0.95));
+            } else if (angleType === 'bevel') {
+                const angleRad = (30 * Math.PI) / 180;
+                const reduction = Math.tan(angleRad) * (thickness * angleEffect * 0.5);
+                topZ = Math.max(0.1, thickness / 2 - reduction);
+            } else if (angleType === 'miter') {
+                const angleRad = (45 * Math.PI) / 180;
+                const reduction = Math.tan(angleRad) * (thickness * angleEffect * 0.5);
+                topZ = Math.max(0.1, thickness / 2 - reduction);
+            } else if (angleType === 'rounded') {
+                const curveAmount = Math.sin(angleEffect * Math.PI / 2);
+                topZ = thickness / 2 * (1 - curveAmount * 0.9);
+            } else if (angleType === 'custom-angle') {
+                const angleRad = (customAngle * Math.PI) / 180;
+                const reduction = Math.tan(angleRad) * (thickness * angleEffect * 0.5);
+                topZ = Math.max(0.1, thickness / 2 - reduction);
+            }
+            
+            return topZ;
+        }
+
+        // ===== MANIFOLD GEOMETRY CREATION =====
+        function createRibGeometry() {
+            const params = getGeometryParameters();
+            
+            validateParameters(params);
+            
+            const segments = 60;
+            const widthSegments = 40;
+            
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const indices = [];
+            
+            const smoothingFactor = parseInt(document.getElementById('smoothing-amount')?.value || 50);
+            const smoothedCurve = params.shape === 'custom' && customCurvePoints.length > 0 
+                ? smoothCurvePoints(customCurvePoints, smoothingFactor) 
+                : null;
+            
+            const vertexGrid = [];
+            
+            for (let i = 0; i <= segments; i++) {
+                const row = [];
+                const t = i / segments;
+                const x = (t - 0.5) * params.length;
+                
+                const longitudinalCurve = params.longitudinalCurve / 100;
+                const curveOffset = Math.sin(t * Math.PI) * params.thickness * longitudinalCurve * 3;
+                
+                for (let j = 0; j <= widthSegments; j++) {
+                    const s = j / widthSegments;
+                    const vertexData = calculateVertexPosition(
+                        x, s, t, params, smoothedCurve, widthSegments, curveOffset
+                    );
+                    
+                    const topIdx = vertices.length / 3;
+                    vertices.push(x, vertexData.y, vertexData.topZ);
+                    vertices.push(x, vertexData.y, vertexData.bottomZ);
+                    
+                    row.push({ top: topIdx, bottom: topIdx + 1 });
+                }
+                
+                vertexGrid.push(row);
+            }
+            
+            for (let i = 0; i < segments; i++) {
+                for (let j = 0; j < widthSegments; j++) {
+                    const v00 = vertexGrid[i][j];
+                    const v10 = vertexGrid[i + 1][j];
+                    const v11 = vertexGrid[i + 1][j + 1];
+                    const v01 = vertexGrid[i][j + 1];
+                    
+                    indices.push(v00.top, v10.top, v11.top);
+                    indices.push(v00.top, v11.top, v01.top);
+                    
+                    indices.push(v00.bottom, v11.bottom, v10.bottom);
+                    indices.push(v00.bottom, v01.bottom, v11.bottom);
+                }
+            }
+            
+            for (let i = 0; i < segments; i++) {
+                const v0 = vertexGrid[i][0];
+                const v1 = vertexGrid[i + 1][0];
+                indices.push(v0.top, v0.bottom, v1.bottom);
+                indices.push(v0.top, v1.bottom, v1.top);
+                
+                const v0r = vertexGrid[i][widthSegments];
+                const v1r = vertexGrid[i + 1][widthSegments];
+                indices.push(v0r.top, v1r.top, v1r.bottom);
+                indices.push(v0r.top, v1r.bottom, v0r.bottom);
+            }
+            
+            for (let j = 0; j < widthSegments; j++) {
+                const v0 = vertexGrid[0][j];
+                const v1 = vertexGrid[0][j + 1];
+                indices.push(v0.top, v1.top, v1.bottom);
+                indices.push(v0.top, v1.bottom, v0.bottom);
+                
+                const v0b = vertexGrid[segments][j];
+                const v1b = vertexGrid[segments][j + 1];
+                indices.push(v0b.top, v0b.bottom, v1b.bottom);
+                indices.push(v0b.top, v1b.bottom, v1b.top);
+            }
+            
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.setIndex(indices);
+            geometry.computeVertexNormals();
+            
+            updateStatistics(geometry, params);
+            
+            return geometry;
+        }
+
+        function getGeometryParameters() {
+            const edgeThicknessApply = document.getElementById('edge-thickness-apply').value;
+            const angleType = document.getElementById('angle-type').value;
+            
+            return {
+                length: parseFloat(document.getElementById('length').value),
+                width: parseFloat(document.getElementById('width').value),
+                thickness: parseFloat(document.getElementById('thickness').value),
+                edgeThickness: parseFloat(document.getElementById('edge-thickness').value),
+                edgeThicknessApply: edgeThicknessApply,
+                edgeTop: edgeThicknessApply === 'asymmetric' ? parseFloat(document.getElementById('edge-top')?.value || 6) : null,
+                edgeBottom: edgeThicknessApply === 'asymmetric' ? parseFloat(document.getElementById('edge-bottom')?.value || 6) : null,
+                edgeLeft: edgeThicknessApply === 'asymmetric' ? parseFloat(document.getElementById('edge-left')?.value || 6) : null,
+                edgeRight: edgeThicknessApply === 'asymmetric' ? parseFloat(document.getElementById('edge-right')?.value || 6) : null,
+                shape: document.getElementById('shape').value,
+                angleType: angleType,
+                angleTop: angleType === 'asymmetric' ? document.getElementById('angle-top')?.value || 'miter' : null,
+                angleBottom: angleType === 'asymmetric' ? document.getElementById('angle-bottom')?.value || 'miter' : null,
+                angleLeft: angleType === 'asymmetric' ? document.getElementById('angle-left')?.value || 'miter' : null,
+                angleRight: angleType === 'asymmetric' ? document.getElementById('angle-right')?.value || 'miter' : null,
+                customAngle: parseFloat(document.getElementById('edge-angle').value || 45),
+                edgeDepth: parseFloat(document.getElementById('edge-depth').value),
+                applyAllEdges: document.getElementById('apply-all-edges').checked,
+                longitudinalCurve: parseFloat(document.getElementById('longitudinal-curve')?.value || 0)
+            };
+        }
+
+        function calculateVertexPosition(x, s, t, params, smoothedCurve, widthSegments, curveOffset = 0) {
+            let y = (s - 0.5) * params.width;
+            
+            let shapeModifier = 1;
+            if (smoothedCurve) {
+                const pointIndex = Math.floor(t * (smoothedCurve.length - 1));
+                const point = smoothedCurve[Math.min(pointIndex, smoothedCurve.length - 1)];
+                if (point) {
+                    const curveInfluence = s;
+                    const centerY = 0.5;
+                    const curveModifier = 1 - Math.abs(point.y - centerY) * 1.5;
+                    const clampedModifier = Math.max(0.1, Math.min(1, curveModifier));
+                    shapeModifier = 1.0 * (1 - curveInfluence) + clampedModifier * curveInfluence;
+                }
+            } else {
+                shapeModifier = getShapeModifier(t, s, params.shape);
+            }
+            
+            y *= shapeModifier;
+            
+            const actualWidth = params.width * Math.abs(shapeModifier);
+            const actualLength = params.length;
+            const distFromTop = actualWidth * (1 - s);
+            const distFromBottom = actualWidth * s;
+            const distFromLeft = actualLength * t;
+            const distFromRight = actualLength * (1 - t);
+            let minDistToEdge = Math.min(distFromTop, distFromBottom, distFromLeft, distFromRight);
+            
+            const isNearTop = distFromTop === minDistToEdge;
+            const isNearBottom = distFromBottom === minDistToEdge;
+            const isNearLeft = distFromLeft === minDistToEdge;
+            const isNearRight = distFromRight === minDistToEdge;
+            const isShapingEdge = isNearTop;
+            
+            let currentThickness = params.thickness;
+            let targetEdgeThickness = params.edgeThickness;
+            
+            if (params.edgeThicknessApply === 'asymmetric') {
+                if (isNearTop) targetEdgeThickness = params.edgeTop;
+                else if (isNearBottom) targetEdgeThickness = params.edgeBottom;
+                else if (isNearLeft) targetEdgeThickness = params.edgeLeft;
+                else if (isNearRight) targetEdgeThickness = params.edgeRight;
+            }
+            
+            if (minDistToEdge <= params.edgeDepth) {
+                const edgeProgress = minDistToEdge / params.edgeDepth;
+                const shouldApplyEdgeThickness = 
+                    params.edgeThicknessApply === 'all' || 
+                    params.edgeThicknessApply === 'asymmetric' ||
+                    (params.edgeThicknessApply === 'shaping' && isShapingEdge);
+                
+                if (shouldApplyEdgeThickness) {
+                    currentThickness = targetEdgeThickness * (1 - edgeProgress) + params.thickness * edgeProgress;
+                }
+            }
+            
+            let topZ = currentThickness / 2 + curveOffset;
+            let bottomZ = -currentThickness / 2 - curveOffset;
+            
+            if (minDistToEdge <= params.edgeDepth) {
+                const edgeProgress = minDistToEdge / params.edgeDepth;
+                const shouldApplyAngle = params.applyAllEdges || 
+                    params.shape === 'oval' || 
+                    params.shape === 'custom' ||
+                    isNearTop || 
+                    distFromBottom === minDistToEdge ||
+                    distFromLeft <= params.edgeDepth || 
+                    distFromRight <= params.edgeDepth;
+                
+                if (shouldApplyAngle) {
+                    const angleEffect = 1 - edgeProgress;
+                    
+                    let edgeAngleType = params.angleType;
+                    if (params.angleType === 'asymmetric') {
+                        if (isNearTop) edgeAngleType = params.angleTop;
+                        else if (isNearBottom) edgeAngleType = params.angleBottom;
+                        else if (isNearLeft) edgeAngleType = params.angleLeft;
+                        else if (isNearRight) edgeAngleType = params.angleRight;
+                    }
+                    
+                    topZ = applyEdgeAngle(edgeAngleType, params.customAngle, currentThickness, angleEffect) + curveOffset;
+                    topZ = topZ * angleEffect + ((currentThickness / 2) + curveOffset) * (1 - angleEffect);
+                }
+            }
+            
+            return { y, topZ, bottomZ };
+        }
+
+        function validateParameters(params) {
+            const edgeWarning = document.getElementById('edge-thickness-warning');
+            if (params.edgeThickness < 0.5) {
+                edgeWarning.classList.add('show');
+            } else {
+                edgeWarning.classList.remove('show');
+            }
+            
+            const depthWarning = document.getElementById('edge-depth-warning');
+            if (params.edgeDepth > params.width / 2 || params.edgeDepth > params.length / 2) {
+                depthWarning.classList.add('show');
+            } else {
+                depthWarning.classList.remove('show');
+            }
+        }
+
+        // ===== STATISTICS =====
+        function updateStatistics(geometry, params) {
+            const positions = geometry.attributes.position.array;
+            const indices = geometry.index.array;
+            
+            let volume = 0;
+            for (let i = 0; i < indices.length; i += 3) {
+                const i1 = indices[i] * 3;
+                const i2 = indices[i + 1] * 3;
+                const i3 = indices[i + 2] * 3;
+                
+                const v1 = [positions[i1], positions[i1 + 1], positions[i1 + 2]];
+                const v2 = [positions[i2], positions[i2 + 1], positions[i2 + 2]];
+                const v3 = [positions[i3], positions[i3 + 1], positions[i3 + 2]];
+                
+                volume += Math.abs(
+                    v1[0] * (v2[1] * v3[2] - v2[2] * v3[1]) +
+                    v2[0] * (v3[1] * v1[2] - v3[2] * v1[1]) +
+                    v3[0] * (v1[1] * v2[2] - v1[2] * v2[1])
+                ) / 6;
+            }
+            
+            volume = Math.abs(volume) / 1000;
+            
+            const pla_density = 1.24;
+            const weight = volume * pla_density;
+            
+            const surfaceArea = (params.length * params.width * 2) / 100;
+            
+            document.getElementById('stat-volume').textContent = volume.toFixed(2) + ' cm³';
+            document.getElementById('stat-weight').textContent = weight.toFixed(1) + ' g';
+            document.getElementById('stat-surface').textContent = surfaceArea.toFixed(1) + ' cm²';
+            
+            const needsSupports = params.angleType === 'sharp' || 
+                                  (params.angleType === 'custom-angle' && params.customAngle < 30);
+            
+            let orientationText = 'Flat';
+            if (needsSupports) {
+                orientationText = 'On Edge';
+            } else if (params.longitudinalCurve > 20) {
+                orientationText = 'Flat (curved)';
+            }
+            document.getElementById('stat-orientation').textContent = orientationText;
+            
+            const size = Math.max(params.length, params.width);
+            let comparison = 'Approximately palm-sized';
+            if (size < 60) comparison = 'Smaller than average palm';
+            else if (size > 120) comparison = 'Larger than average palm';
+            document.getElementById('stat-comparison').textContent = comparison;
+            
+            document.getElementById('support-recommendation').textContent = 
+                needsSupports ? 'Recommended for steep angles' : 'Usually not needed';
+            
+            let orientationRecommendation = 'Flat on build plate';
+            if (needsSupports) {
+                orientationRecommendation = 'Print on edge with supports';
+            } else if (params.longitudinalCurve > 20) {
+                orientationRecommendation = 'Flat on build plate (curved ribs may need support under the curve)';
+            }
+            document.getElementById('orientation-recommendation').textContent = orientationRecommendation;
+        }
+
+        // ===== UPDATE FUNCTIONS =====
+        function updateRib() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.classList.add('show');
+            
+            setTimeout(() => {
+                try {
+                    if (appRib) {
+                        appScene.remove(appRib);
+                        appRib.geometry.dispose();
+                        appRib.material.dispose();
+                    }
+                    
+                    const geometry = createRibGeometry();
+                    
+                    const material = new THREE.MeshStandardMaterial({
+                        color: 0xd63447,
+                        roughness: 0.4,
+                        metalness: 0.2,
+                        side: THREE.DoubleSide
+                    });
+                    
+                    appRib = new THREE.Mesh(geometry, material);
+                    appScene.add(appRib);
+                    
+                    updateThumbnails();
+                } finally {
+                    loadingOverlay.classList.remove('show');
+                }
+            }, 10);
+        }
+
+        function debouncedUpdate() {
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(updateRib, 100);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            appRenderer.render(appScene, appCamera);
+        }
+
+        // ===== DRAWING CANVAS =====
+        const drawingCanvas = document.getElementById('drawing-canvas');
+        const ctx = drawingCanvas.getContext('2d');
+
+        function drawGrid() {
+            ctx.strokeStyle = '#f9d96b';
+            ctx.lineWidth = 1;
+            
+            for (let i = 0; i <= 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * drawingCanvas.height / 10);
+                ctx.lineTo(drawingCanvas.width, i * drawingCanvas.height / 10);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(i * drawingCanvas.width / 10, 0);
+                ctx.lineTo(i * drawingCanvas.width / 10, drawingCanvas.height);
+                ctx.stroke();
+            }
+            
+            if (document.getElementById('symmetry-guide').checked) {
+                ctx.strokeStyle = '#0066cc';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, drawingCanvas.height / 2);
+                ctx.lineTo(drawingCanvas.width, drawingCanvas.height / 2);
+                ctx.stroke();
+            }
+            
+            ctx.fillStyle = '#0066cc';
+            ctx.font = 'bold 14px Nunito';
+            ctx.textAlign = 'center';
+            ctx.fillText('Draw from left to right', drawingCanvas.width / 2, 20);
+        }
+
+        function openDrawingModal() {
+            document.getElementById('drawing-modal').classList.add('show');
+            drawGrid();
+        }
+
+        drawingCanvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            drawingHistory = [...customCurvePoints];
+            const rect = drawingCanvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / drawingCanvas.width;
+            const y = (e.clientY - rect.top) / drawingCanvas.height;
+            customCurvePoints.push({ x, y });
+        });
+
+        drawingCanvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            
+            const rect = drawingCanvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / drawingCanvas.width;
+            const y = (e.clientY - rect.top) / drawingCanvas.height;
+            
+            customCurvePoints.push({ x, y });
+            
+            if (customCurvePoints.length > 1) {
+                const prevPoint = customCurvePoints[customCurvePoints.length - 2];
+                const currPoint = customCurvePoints[customCurvePoints.length - 1];
+                
+                ctx.strokeStyle = '#d63447';
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                ctx.moveTo(prevPoint.x * drawingCanvas.width, prevPoint.y * drawingCanvas.height);
+                ctx.lineTo(currPoint.x * drawingCanvas.width, currPoint.y * drawingCanvas.height);
+                ctx.stroke();
+            }
+        });
+
+        drawingCanvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        document.getElementById('symmetry-guide').addEventListener('change', () => {
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            drawGrid();
+            redrawCustomCurve();
+        });
+
+        function redrawCustomCurve() {
+            if (customCurvePoints.length < 2) return;
+            
+            ctx.strokeStyle = '#d63447';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(
+                customCurvePoints[0].x * drawingCanvas.width,
+                customCurvePoints[0].y * drawingCanvas.height
+            );
+            
+            for (let i = 1; i < customCurvePoints.length; i++) {
+                ctx.lineTo(
+                    customCurvePoints[i].x * drawingCanvas.width,
+                    customCurvePoints[i].y * drawingCanvas.height
+                );
+            }
+            ctx.stroke();
+        }
+
+        function clearDrawing() {
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            drawGrid();
+            customCurvePoints = [];
+            drawingHistory = [];
+        }
+
+        function undoDrawing() {
+            if (drawingHistory.length > 0) {
+                customCurvePoints = [...drawingHistory];
+                ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                drawGrid();
+                redrawCustomCurve();
+            }
+        }
+
+        function applyCustomCurve() {
+            if (customCurvePoints.length > 5) {
+                updateRib();
+                closeDrawingModal();
+                showToast('Custom shape applied successfully');
+            } else {
+                showToast('Please draw a longer curve (draw from left to right across the canvas)', true);
+            }
+        }
+
+        function closeDrawingModal() {
+            document.getElementById('drawing-modal').classList.remove('show');
+        }
+
+        // ===== PRESETS =====
+        function applyPreset(preset) {
+            const presets = {
+                'thin-flexible': {
+                    length: 120, width: 60, thickness: 3, edgeThickness: 1,
+                    edgeDepth: 15, shape: 'oval', angleType: 'rounded'
+                },
+                'thick-rigid': {
+                    length: 100, width: 70, thickness: 10, edgeThickness: 8,
+                    edgeDepth: 12, shape: 'rectangular', angleType: 'miter'
+                },
+                'kidney-style': {
+                    length: 110, width: 80, thickness: 6, edgeThickness: 3,
+                    edgeDepth: 10, shape: 'kidney', angleType: 'rounded'
+                },
+                'trimming': {
+                    length: 70, width: 40, thickness: 5, edgeThickness: 2,
+                    edgeDepth: 8, shape: 'teardrop', angleType: 'bevel'
+                },
+                'throwing': {
+                    length: 150, width: 90, thickness: 8, edgeThickness: 5,
+                    edgeDepth: 15, shape: 'kidney', angleType: 'rounded'
+                },
+                'smoothing': {
+                    length: 100, width: 50, thickness: 4, edgeThickness: 1.5,
+                    edgeDepth: 20, shape: 'oval', angleType: 'rounded'
+                }
+            };
+            
+            const config = presets[preset];
+            if (!config) return;
+            
+            Object.keys(config).forEach(key => {
+                const element = document.getElementById(key.replace(/([A-Z])/g, '-$1').toLowerCase());
+                if (element) {
+                    element.value = config[key];
+                    if (element.type === 'checkbox') {
+                        element.checked = config[key];
+                    }
+                    element.dispatchEvent(new Event('input'));
+                    element.dispatchEvent(new Event('change'));
+                }
+            });
+            
+            showToast('Preset applied: ' + preset.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+            updateRib();
+        }
+
+        // ===== EXPORT FUNCTIONS =====
+        function exportSTL() {
+            const geometry = appRib.geometry;
+            const vertices = geometry.attributes.position.array;
+            const indices = geometry.index.array;
+            
+            let output = 'solid pottery_rib\n';
+            
+            for (let i = 0; i < indices.length; i += 3) {
+                const i1 = indices[i] * 3;
+                const i2 = indices[i + 1] * 3;
+                const i3 = indices[i + 2] * 3;
+                
+                const v1 = new THREE.Vector3(vertices[i1], vertices[i1 + 1], vertices[i1 + 2]);
+                const v2 = new THREE.Vector3(vertices[i2], vertices[i2 + 1], vertices[i2 + 2]);
+                const v3 = new THREE.Vector3(vertices[i3], vertices[i3 + 1], vertices[i3 + 2]);
+                
+                const normal = new THREE.Vector3().crossVectors(
+                    new THREE.Vector3().subVectors(v2, v1),
+                    new THREE.Vector3().subVectors(v3, v1)
+                ).normalize();
+                
+                output += `  facet normal ${normal.x.toFixed(6)} ${normal.y.toFixed(6)} ${normal.z.toFixed(6)}\n`;
+                output += '    outer loop\n';
+                output += `      vertex ${v1.x.toFixed(6)} ${v1.y.toFixed(6)} ${v1.z.toFixed(6)}\n`;
+                output += `      vertex ${v2.x.toFixed(6)} ${v2.y.toFixed(6)} ${v2.z.toFixed(6)}\n`;
+                output += `      vertex ${v3.x.toFixed(6)} ${v3.y.toFixed(6)} ${v3.z.toFixed(6)}\n`;
+                output += '    endloop\n';
+                output += '  endfacet\n';
+            }
+            
+            output += 'endsolid pottery_rib\n';
+            
+            const blob = new Blob([output], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'pottery_rib.stl';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            
+            showToast('STL file downloaded successfully');
+        }
+
+        function exportOBJ() {
+            const geometry = appRib.geometry;
+            const vertices = geometry.attributes.position.array;
+            const indices = geometry.index.array;
+            
+            let output = '# Pottery Rib\n';
+            output += '# Generated by Pottery Rib Customizer\n\n';
+            
+            for (let i = 0; i < vertices.length; i += 3) {
+                output += `v ${vertices[i].toFixed(6)} ${vertices[i + 1].toFixed(6)} ${vertices[i + 2].toFixed(6)}\n`;
+            }
+            
+            output += '\n';
+            
+            for (let i = 0; i < indices.length; i += 3) {
+                output += `f ${indices[i] + 1} ${indices[i + 1] + 1} ${indices[i + 2] + 1}\n`;
+            }
+            
+            const blob = new Blob([output], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'pottery_rib.obj';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            
+            showToast('OBJ file downloaded successfully');
+        }
+
+        // ===== UI HELPERS =====
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            toast.style.borderColor = isError ? '#dc3545' : 'var(--primary-blue)';
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function toggleGrid() {
+            showGrid = !showGrid;
+            const gridCanvas = document.getElementById('grid-overlay');
+            
+            if (showGrid) {
+                const ctx = gridCanvas.getContext('2d');
+                gridCanvas.width = gridCanvas.parentElement.clientWidth;
+                gridCanvas.height = gridCanvas.parentElement.clientHeight;
+                
+                ctx.strokeStyle = 'rgba(0, 102, 204, 0.3)';
+                ctx.lineWidth = 1;
+                
+                const gridSize = 50;
+                for (let x = 0; x < gridCanvas.width; x += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, gridCanvas.height);
+                    ctx.stroke();
+                }
+                for (let y = 0; y < gridCanvas.height; y += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(gridCanvas.width, y);
+                    ctx.stroke();
+                }
+                
+                showToast('Grid overlay enabled');
+            } else {
+                const ctx = gridCanvas.getContext('2d');
+                ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+                showToast('Grid overlay disabled');
+            }
+        }
+
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId + '-content');
+            const icon = document.getElementById(sectionId + '-icon');
+            
+            content.classList.toggle('open');
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-up');
+        }
+
+        function updateThicknessSuggestions() {
+            const thickness = parseFloat(document.getElementById('thickness').value);
+            document.getElementById('current-thickness-display').textContent = thickness + 'mm';
+            document.getElementById('petg-suggestion').textContent = (thickness + 1) + '-' + (thickness + 2) + 'mm';
+            document.getElementById('tpu-suggestion').textContent = (thickness + 2) + '-' + (thickness + 4) + 'mm';
+        }
+
+        // ===== EVENT LISTENERS =====
+        ['length', 'width', 'thickness', 'edge-thickness', 'edge-angle', 'edge-depth', 
+         'longitudinal-curve', 'smoothing-amount'].forEach(id => {
+            const slider = document.getElementById(id);
+            const input = document.getElementById(id + '-input');
+            const display = document.getElementById(id + '-value');
+            
+            if (slider && display) {
+                slider.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    const unit = id.includes('angle') ? '°' : (id.includes('curve') || id.includes('smoothing') ? '%' : 'mm');
+                    display.textContent = value + unit;
+                    if (input) input.value = value;
+                    
+                    if (id === 'thickness') {
+                        updateThicknessSuggestions();
+                    }
+                    
+                    debouncedUpdate();
+                });
+            }
+            
+            if (input && display) {
+                input.addEventListener('input', (e) => {
+                    const min = parseFloat(e.target.min);
+                    const max = parseFloat(e.target.max);
+                    const value = Math.min(Math.max(e.target.value, min), max);
+                    e.target.value = value;
+                    if (slider) slider.value = value;
+                    const unit = id.includes('angle') ? '°' : (id.includes('curve') || id.includes('smoothing') ? '%' : 'mm');
+                    display.textContent = value + unit;
+                    
+                    if (id === 'thickness') {
+                        updateThicknessSuggestions();
+                    }
+                    
+                    debouncedUpdate();
+                });
+            }
+        });
+
+        ['edge-top', 'edge-bottom', 'edge-left', 'edge-right'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', debouncedUpdate);
+            }
+        });
+
+        document.getElementById('shape').addEventListener('change', (e) => {
+            const customShapeInfo = document.getElementById('custom-shape-info');
+            customShapeInfo.style.display = e.target.value === 'custom' ? 'block' : 'none';
+            debouncedUpdate();
+        });
+
+        document.getElementById('angle-type').addEventListener('change', (e) => {
+            const value = e.target.value;
+            document.getElementById('custom-angle-control').style.display = 
+                value === 'custom-angle' ? 'block' : 'none';
+            document.getElementById('asymmetric-angle-controls').style.display = 
+                value === 'asymmetric' ? 'block' : 'none';
+            debouncedUpdate();
+        });
+
+        ['angle-top', 'angle-bottom', 'angle-left', 'angle-right'].forEach(id => {
+            const select = document.getElementById(id);
+            if (select) {
+                select.addEventListener('change', debouncedUpdate);
+            }
+        });
+
+        document.getElementById('edge-thickness-apply').addEventListener('change', (e) => {
+            document.getElementById('asymmetric-controls').style.display = 
+                e.target.value === 'asymmetric' ? 'block' : 'none';
+            debouncedUpdate();
+        });
+
+        document.getElementById('apply-all-edges').addEventListener('change', debouncedUpdate);
+
+        window.addEventListener('load', () => {
+            initScene();
+            drawGrid();
+            updateThicknessSuggestions();
+        });
+
+        window.addEventListener('resize', () => {
+            const container = document.getElementById('canvas-container');
+            appCamera.aspect = container.clientWidth / container.clientHeight;
+            appCamera.updateProjectionMatrix();
+            appRenderer.setSize(container.clientWidth, container.clientHeight);
+            
+            initThumbnails();
+            updateThumbnails();
+        });
+    </script>
 </body>
 </html>

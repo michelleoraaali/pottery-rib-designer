@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pottery Rib Customizer</title>
+    
+    <!-- External CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="header">
+        <div class="container">
+            <h1>Pottery Rib Customizer</h1>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-notification" id="toast">
+        <div id="toast-message"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row">
+            <!-- Left Column: Controls -->
+            <div class="col-lg-4 mb-4">
+                <div class="control-panel">
+                    <h5 class="mb-3">Customize Your Rib</h5>
+
+                    <!-- Quick Presets Section -->
+                    <div class="collapsible-section">
+                        <div class="collapsible-header" onclick="toggleSection('presets')">
+                            <span>Do you want to start with a quick preset? <i class="fas fa-chevron-down" id="presets-icon"></i></span>
+                        </div>
+                        <div class="collapsible-content" id="presets-content">
+                            <div class="preset-grid">
+                                <div class="preset-card" onclick="applyPreset('thin-flexible')">
+                                    <div class="preset-name">Thin & Flexible</div>
+                                    <div class="preset-desc">For delicate work</div>
+                                </div>
+                                <div class="preset-card" onclick="applyPreset('thick-rigid')">
+                                    <div class="preset-name">Thick & Rigid</div>
+                                    <div class="preset-desc">Heavy duty</div>
+                                </div>
+                                <div class="preset-card" onclick="applyPreset('kidney-style')">
+                                    <div class="preset-name">Kidney Style</div>
+                                    <div class="preset-desc">Wide oval grip</div>
+                                </div>
+                                <div class="preset-card" onclick="applyPreset('trimming')">
+                                    <div class="preset-name">Small Trimming</div>
+                                    <div class="preset-desc">Precise control</div>
+                                </div>
+                                <div class="preset-card" onclick="applyPreset('throwing')">
+                                    <div class="preset-name">Large Throwing</div>
+                                    <div class="preset-desc">Big pieces</div>
+                                </div>
+                                <div class="preset-card" onclick="applyPreset('smoothing')">
+                                    <div class="preset-name">Surface Smoothing</div>
+                                    <div class="preset-desc">Finishing tool</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Basic Dimensions Section -->
+                    <div class="section-header">Basic Dimensions</div>
+
+                    <!-- Length Control -->
+                    <div class="control-group">
+                        <label>Length <span class="value-display" id="length-value">100mm</span></label>
+                        <div class="input-with-slider">
+                            <input type="number" id="length-input" min="50" max="200" value="100" step="5">
+                            <input type="range" class="form-range" id="length" min="50" max="200" value="100" step="5">
+                        </div>
+                    </div>
+
+                    <!-- Width Control -->
+                    <div class="control-group">
+                        <label>Width <span class="value-display" id="width-value">60mm</span></label>
+                        <div class="input-with-slider">
+                            <input type="number" id="width-input" min="30" max="100" value="60" step="5">
+                            <input type="range" class="form-range" id="width" min="30" max="100" value="60" step="5">
+                        </div>
+                    </div>
+
+                    <!-- Thickness Control with Suggestions -->
+                    <div class="control-group">
+                        <label>Thickness <span class="value-display" id="thickness-value">6mm</span></label>
+                        <div class="input-with-slider">
+                            <input type="number" id="thickness-input" min="3" max="12" value="6" step="0.5">
+                            <input type="range" class="form-range" id="thickness" min="3" max="12" value="6" step="0.5">
+                        </div>
+                        
+                        <!-- Thickness Suggestions Collapsible -->
+                        <div class="collapsible-section mt-2">
+                            <div class="collapsible-header" onclick="toggleSection('thickness-suggestions')">
+                                <span>Looking for suggestions? <i class="fas fa-chevron-down" id="thickness-suggestions-icon"></i></span>
+                            </div>
+                            <div class="collapsible-content" id="thickness-suggestions-content">
+                                <div style="padding: 1rem; background: #f8f9fa; border-radius: 10px;">
+                                    <h6 style="color: var(--primary-blue); font-weight: 700; margin-bottom: 0.75rem;">Thickness Based on Material:</h6>
+                                    <p style="margin-bottom: 0.5rem;"><strong>Rigid Materials (PLA, ABS):</strong><br>
+                                    Your current thickness of <span id="current-thickness-display">6mm</span> is appropriate for rigid materials.</p>
+                                    
+                                    <p style="margin-bottom: 0.5rem;"><strong>Semi-Flexible (PETG):</strong><br>
+                                    Consider increasing by 1-2mm (recommended: <span id="petg-suggestion">7-8mm</span>)</p>
+                                    
+                                    <p style="margin-bottom: 0;"><strong>Flexible (TPU):</strong><br>
+                                    Consider increasing by 2-4mm (recommended: <span id="tpu-suggestion">8-10mm</span>)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Overall Shape Section -->
+                    <div class="section-header">Overall Shape</div>
+
+                    <div class="control-group">
+                        <label>Shape Type</label>
+                        <select class="form-select" id="shape">
+                            <option value="rectangular">Rectangular</option>
+                            <option value="oval">Oval</option>
+                            <option value="circle">Circle</option>
+                            <option value="teardrop">Teardrop</option>
+                            <option value="kidney">Kidney Bean</option>
+                            <option value="asymmetric-teardrop">Asymmetric Teardrop</option>
+                            <option value="custom">Draw Custom Shaping Edge</option>
+                        </select>
+                        <div class="info-text" id="custom-shape-info" style="display: none;">
+                            <button class="btn btn-sm btn-primary" onclick="openDrawingModal()">
+                                Open Drawing Canvas
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Longitudinal Curve Control -->
+                    <div class="control-group">
+                        <label>Longitudinal Curve <span class="value-display" id="longitudinal-curve-value">0%</span></label>
+                        <div class="input-with-slider">
+                            <input type="number" id="longitudinal-curve-input" min="0" max="100" value="0" step="5">
+                            <input type="range" class="form-range" id="longitudinal-curve" min="0" max="100" value="0" step="5">
+                        </div>
+                        <div class="info-text">Bends the rib lengthwise (like a slight bow) to help it conform to curved pottery surfaces</div>
+                    </div>
+
+                    <!-- Edge Properties Section -->
+                    <div class="section-header">Edge Properties</div>
+
+                    <!-- Edge Thickness Control -->
+                    <div class="control-group">
+                        <label>Edge Thickness <span class="value-display" id="edge-thickness-value">6mm</span></label>
+                        <div class="input-with-slider">
+                            <input type="number" id="edge-thickness-input" min="0.1" max="12" value="6" step="0.1">
+                            <input type="range" class="form-range" id="edge-thickness" min="0.1" max="12" value="6" step="0.1">
+                        </div>
+                        <div class="info-text">Thickness at the perimeter edges</div>
+                        <div class="warning-text" id="edge-thickness-warning">
+                            Edge thickness below 0.5mm may be difficult to print reliably
+                        </div>
+                    </div>
+
+                    <!-- Edge Thickness Application -->
+                    <div class="control-group">
+                        <label>Edge Thickness</label>
+                        <select class="form-select" id="edge-thickness-apply">
+                            <option value="all">Apply to All Edges</option>
+                            <option value="shaping">Apply to Shaping Edge Only</option>
+                            <option value="asymmetric">Asymmetric (Custom per Edge)</option>
+                        </select>
+                    </div>
+
+                    <!-- Asymmetric Edge Thickness Controls -->
+                    <div id="asymmetric-controls" style="display: none;">
+                        <div class="edge-thickness-grid">
+                            <div class="edge-control">
+                                <div class="edge-control-label">Top Edge</div>
+                                <input type="number" class="form-control" id="edge-top" min="0.1" max="12" value="6" step="0.1">
+                            </div>
+                            <div class="edge-control">
+                                <div class="edge-control-label">Bottom Edge</div>
+                                <input type="number" class="form-control" id="edge-bottom" min="0.1" max="12" value="6" step="0.1">
+                            </div>
+                            <div class="edge-control">
+                                <div class="edge-control-label">Left Edge</div>
+                                <input type="number" class="form-control" id="edge-left" min="0.1" max="12" value="6" step="0.1">
+                            </div>
+                            <div class="edge-control">
+                                <div class="edge-control-label">Right Edge</div>
+                                <input type="number" class="form-control" id="edge-right" min="0.1" max="12" value="6" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edge Profile Type -->
+                    <div class="control-group">
+                        <label>Edge Profile Type</label>
+                        <select class="form-select" id="angle-type">
+                            <option value="straight">Straight (90°)</option>
+                            <option value="sharp">Sharp (0° - Knife Edge)</option>
+                            <option value="bevel">Bevel (30°)</option>
+                            <option value="miter">Miter (45°)</option>
+                            <option value="rounded">Fully Rounded (180°)</option>
+                            <option value="custom-angle">Custom Angle</option>
+                            <option value="asymmetric">Asymmetric (Custom per Edge)</option>
+                        </select>
+                    </div>
+
+                    <!-- Custom Angle Control -->
+                    <div class="control-group" id="custom-angle-control" style="display: none;">
+                        <label>Edge Angle <span class="value-display" id="angle-value">45°</span></label>
+                        <div class="input-with-slider">
+                            <input type="number" id="edge-angle-input" min="0" max="90" value="45" step="5">
+                            <input type="range" class="form-range" id="edge-angle" min="0" max="90" value="45" step="5">
+                        </div>
+                    </div>
+
+                    <!-- Asymmetric Angle Controls -->
+                    <div id="asymmetric-angle-controls" style="display: none;">
+                        <div class="edge-thickness-grid">
+                            <div class="edge-control">
+                                <div class="edge-control-label">Top Edge Profile</div>
+                                <select class="form-select" id="angle-top">
+                                    <option value="straight">Straight (90°)</option>
+                                    <option value="sharp">Sharp (0°)</option>
+                                    <option value="bevel">Bevel (30°)</option>
+                                    <option value="miter" selected>Miter (45°)</option>
+                                    <option value="rounded">Rounded (180°)</option>
+                                </select>
+                            </div>
+                            <div class="edge-control">
+                                <div class="edge-control-label">Bottom Edge Profile</div>
+                                <select class="form-select" id="angle-bottom">
+                                    <option value="straight">Straight (90°)</option>
+                                    <option value="sharp">Sharp (0°)</option>
+                                    <option value="bevel">Bevel (30°)</option>
+                                    <option value="miter" selected>Miter (45°)</option>
+                                    <option value="rounded">Rounded (180°)</option>
+                                </select>
+                            </div>
+                            <div class="edge-control">
+                                <div class="edge-control-label">Left Edge Profile</div>
+                                <select class="form-select" id="angle-left">
+                                    <option value="straight">Straight (90°)</option>
+                                    <option value="sharp">Sharp (0°)</option>
+                                    <option value="bevel">Bevel (30°)</option>
+                                    <option value="miter" selected>Miter (45°)</option>
+                                    <option value="rounded">Rounded (180°)</option>
+                                </select>
+                            </div>
+                            <div class="edge-control">
+                                <div class="edge-control-label">Right Edge Profile</div>
+                                <select class="form-select" id="angle-right">
+                                    <option value="straight">Straight (90°)</option>
+                                    <option value="sharp">Sharp (0°)</option>
+                                    <option value="bevel">Bevel (30°)</option>
+                                    <option value="miter" selected>Miter (45°)</option>
+                                    <option value="rounded">Rounded (180°)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edge Depth Control -->
+                    <div class="control-group">
+                        <label>Edge Depth <span class="value-display" id="edge-depth-value">10mm</span></label>
+                        <div class="input-with-slider">
+                            <input type="number" id="edge-depth-input" min="3" max="30" value="10" step="1">
+                            <input type="range" class="form-range" id="edge-depth" min="3" max="30" value="10" step="1">
+                        </div>
+                        <div class="info-text">How far the edge angle extends inward</div>
+                        <div class="warning-text" id="edge-depth-warning">
+                            Edge depth exceeds safe dimensions - may cause issues
+                        </div>
+                    </div>
+
+                    <!-- Apply to All Edges Checkbox -->
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="apply-all-edges" checked style="margin-right: 0.5rem;">
+                            Apply profile to all edges
+                        </label>
+                    </div>
+
+                    <!-- Export Options -->
+                    <div class="d-grid gap-2 mt-4">
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle w-100" type="button" id="downloadDropdown" data-bs-toggle="dropdown">
+                                Download Your Rib!
+                            </button>
+                            <ul class="dropdown-menu w-100">
+                                <li><a class="dropdown-item" href="#" onclick="exportSTL(); return false;">
+                                    Download as STL
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportOBJ(); return false;">
+                                    Download as OBJ
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 3D Printing Tips Section -->
+                    <div class="collapsible-section mt-3">
+                        <div class="collapsible-header" onclick="toggleSection('printing-tips')">
+                            <span>3D Printing Tips <i class="fas fa-chevron-down" id="printing-tips-icon"></i></span>
+                        </div>
+                        <div class="collapsible-content" id="printing-tips-content">
+                            <div style="padding: 1rem; background: #f8f9fa; border-radius: 10px;">
+                                <h6 style="color: var(--primary-blue); font-weight: 700; margin-bottom: 0.75rem;">Recommended Settings:</h6>
+                                <ul style="margin-bottom: 1rem; padding-left: 1.25rem;">
+                                    <li><strong>Layer Height:</strong> 0.2mm for standard quality, 0.1mm for smooth finish</li>
+                                    <li><strong>Infill:</strong> 20-30% (higher for rigid ribs, lower for flexible)</li>
+                                    <li><strong>Supports:</strong> <span id="support-recommendation">Usually not needed</span></li>
+                                    <li><strong>Print Orientation:</strong> <span id="orientation-recommendation">Flat on build plate (unless you've added longitudinal curve)</span></li>
+                                </ul>
+
+                                <h6 style="color: var(--primary-blue); font-weight: 700; margin-bottom: 0.75rem;">Material Recommendations:</h6>
+                                <ul style="margin-bottom: 1rem; padding-left: 1.25rem;">
+                                    <li><strong>PLA:</strong> Best for rigid ribs, easy to print</li>
+                                    <li><strong>PETG:</strong> More durable, semi-flexible</li>
+                                    <li><strong>TPU:</strong> For flexible ribs (adjust thickness accordingly)</li>
+                                </ul>
+
+                                <h6 style="color: var(--primary-blue); font-weight: 700; margin-bottom: 0.75rem;">Important Notes:</h6>
+                                <ul style="margin-bottom: 0; padding-left: 1.25rem;">
+                                    <li>Edge thickness below 0.5mm may require fine nozzle (0.3mm or smaller)</li>
+                                    <li>Ensure your slicer respects minimum wall thickness</li>
+                                    <li>Test with small models before full-size prints</li>
+                                    <li>Post-process edges with sandpaper for smoothest finish</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: 3D Preview -->
+            <div class="col-lg-8">
+                <div class="viewer-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">3D Preview</h5>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleGrid()">Grid</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="resetCamera()">Reset View</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Canvas Container -->
+                    <div id="canvas-container">
+                        <div class="loading-overlay" id="loading-overlay">
+                            <div class="spinner"></div>
+                        </div>
+                        <canvas id="grid-overlay" class="grid-overlay"></canvas>
+                        <div class="canvas-instructions">
+                            Click and drag to rotate • Scroll to zoom
+                        </div>
+                    </div>
+
+                    <!-- View Thumbnails -->
+                    <div class="view-thumbnails">
+                        <div class="view-thumbnail active" id="view-3d" onclick="switchView('3d')">
+                            <canvas id="thumb-3d"></canvas>
+                            <div class="view-label">3D View</div>
+                        </div>
+                        <div class="view-thumbnail" id="view-top" onclick="switchView('top')">
+                            <canvas id="thumb-top"></canvas>
+                            <div class="view-label">Top View</div>
+                        </div>
+                        <div class="view-thumbnail" id="view-side" onclick="switchView('side')">
+                            <canvas id="thumb-side"></canvas>
+                            <div class="view-label">Side View</div>
+                        </div>
+                        <div class="view-thumbnail" id="view-cross" onclick="switchView('cross')">
+                            <canvas id="thumb-cross"></canvas>
+                            <div class="view-label">Cross Section</div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Panel -->
+                    <div class="stats-panel">
+                        <h6 class="text-center mb-2" style="color: var(--primary-blue); font-weight: 800;">
+                            Design Statistics
+                        </h6>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">Estimated Volume</div>
+                                <div class="stat-value" id="stat-volume">0 cm³</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Est. Weight (PLA)</div>
+                                <div class="stat-value" id="stat-weight">0 g</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Surface Area</div>
+                                <div class="stat-value" id="stat-surface">0 cm²</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Print Orientation</div>
+                                <div class="stat-value" id="stat-orientation">Flat</div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-2">
+                            <small class="info-text">
+                                <span id="stat-comparison">Approximately palm-sized</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drawing Modal -->
+    <div id="drawing-modal" class="modal-custom">
+        <div class="modal-container">
+            <h5 class="mb-3">Draw Your Custom Shaping Edge</h5>
+            <p class="text-muted">Draw a smooth curve from left to right. This defines your rib's top edge shape.</p>
+            
+            <!-- Smoothing Control -->
+            <div class="mb-3">
+                <label>Smoothing Amount <span class="value-display" id="smoothing-value">50%</span></label>
+                <input type="range" class="form-range" id="smoothing-amount" min="0" max="100" value="50" step="5">
+            </div>
+
+            <!-- Symmetry Guide Checkbox -->
+            <div class="mb-2">
+                <label>
+                    <input type="checkbox" id="symmetry-guide" checked style="margin-right: 0.5rem;">
+                    Show Symmetry Guide
+                </label>
+            </div>
+
+            <!-- Drawing Canvas -->
+            <canvas id="drawing-canvas" width="500" height="300"></canvas>
+            
+            <!-- Drawing Modal Buttons -->
+            <div class="d-grid gap-2 mt-3">
+                <button class="btn btn-primary" onclick="applyCustomCurve()">Apply Shape</button>
+                <div class="action-buttons">
+                    <button class="btn btn-outline-secondary" onclick="undoDrawing()">Undo</button>
+                    <button class="btn btn-outline-secondary" onclick="clearDrawing()">Clear</button>
+                </div>
+                <button class="btn btn-outline-secondary" onclick="closeDrawingModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- External JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>
