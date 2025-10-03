@@ -102,11 +102,6 @@
         .control-group {
             margin-bottom: 1.5rem;
             padding-bottom: 1.5rem;
-            border-bottom: 2px solid var(--bright-yellow);
-        }
-
-        .control-group:last-child {
-            border-bottom: none;
         }
 
         .control-group label {
@@ -277,6 +272,59 @@
             border: 2px solid var(--primary-blue);
             pointer-events: none;
         }
+
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #fff9e6;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bright-yellow);
+            border-radius: 10px;
+            border: 2px solid #fff9e6;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-yellow);
+        }
+
+        /* For Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--bright-yellow) #fff9e6;
+        }
+
+        /* Input field styling */
+        .input-with-slider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .input-with-slider input[type="number"] {
+            width: 80px;
+            padding: 0.5rem;
+            border: 3px solid var(--primary-blue);
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .input-with-slider input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 0.2rem rgba(214, 52, 71, 0.25);
+        }
+
+        .input-with-slider input[type="range"] {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -297,21 +345,30 @@
                         <label>
                             Length <span class="value-display" id="length-value">100mm</span>
                         </label>
-                        <input type="range" class="form-range" id="length" min="50" max="200" value="100" step="5">
+                        <div class="input-with-slider">
+                            <input type="number" id="length-input" min="50" max="200" value="100" step="5">
+                            <input type="range" class="form-range" id="length" min="50" max="200" value="100" step="5">
+                        </div>
                     </div>
 
                     <div class="control-group">
                         <label>
                             Width <span class="value-display" id="width-value">60mm</span>
                         </label>
-                        <input type="range" class="form-range" id="width" min="30" max="100" value="60" step="5">
+                        <div class="input-with-slider">
+                            <input type="number" id="width-input" min="30" max="100" value="60" step="5">
+                            <input type="range" class="form-range" id="width" min="30" max="100" value="60" step="5">
+                        </div>
                     </div>
 
                     <div class="control-group">
                         <label>
                             Thickness <span class="value-display" id="thickness-value">6mm</span>
                         </label>
-                        <input type="range" class="form-range" id="thickness" min="3" max="12" value="6" step="0.5">
+                        <div class="input-with-slider">
+                            <input type="number" id="thickness-input" min="3" max="12" value="6" step="0.5">
+                            <input type="range" class="form-range" id="thickness" min="3" max="12" value="6" step="0.5">
+                        </div>
                     </div>
 
                     <div class="control-group">
@@ -346,7 +403,10 @@
                         <label>
                             Edge Thickness <span class="value-display" id="edge-thickness-value">6mm</span>
                         </label>
-                        <input type="range" class="form-range" id="edge-thickness" min="0.5" max="12" value="6" step="0.5">
+                        <div class="input-with-slider">
+                            <input type="number" id="edge-thickness-input" min="0.5" max="12" value="6" step="0.5">
+                            <input type="range" class="form-range" id="edge-thickness" min="0.5" max="12" value="6" step="0.5">
+                        </div>
                         <div class="info-text">Thickness at the perimeter edges (min 0.5mm for FDM printing)</div>
                     </div>
 
@@ -377,14 +437,20 @@
                         <label>
                             Edge Angle <span class="value-display" id="angle-value">45°</span>
                         </label>
-                        <input type="range" class="form-range" id="edge-angle" min="0" max="90" value="45" step="5">
+                        <div class="input-with-slider">
+                            <input type="number" id="edge-angle-input" min="0" max="90" value="45" step="5">
+                            <input type="range" class="form-range" id="edge-angle" min="0" max="90" value="45" step="5">
+                        </div>
                     </div>
 
                     <div class="control-group">
                         <label>
                             Edge Depth <span class="value-display" id="edge-depth-value">10mm</span>
                         </label>
-                        <input type="range" class="form-range" id="edge-depth" min="3" max="30" value="10" step="1">
+                        <div class="input-with-slider">
+                            <input type="number" id="edge-depth-input" min="3" max="30" value="10" step="1">
+                            <input type="range" class="form-range" id="edge-depth" min="3" max="30" value="10" step="1">
+                        </div>
                         <div class="info-text">How far the edge angle extends inward</div>
                     </div>
 
@@ -1070,35 +1136,95 @@
         }
 
         // ===== EVENT LISTENERS =====
+        // Length control
         document.getElementById('length').addEventListener('input', (e) => {
-            document.getElementById('length-value').textContent = e.target.value + 'mm';
+            const value = e.target.value;
+            document.getElementById('length-value').textContent = value + 'mm';
+            document.getElementById('length-input').value = value;
+            debouncedUpdate();
+        });
+        document.getElementById('length-input').addEventListener('input', (e) => {
+            const value = Math.min(Math.max(e.target.value, 50), 200);
+            e.target.value = value;
+            document.getElementById('length').value = value;
+            document.getElementById('length-value').textContent = value + 'mm';
             debouncedUpdate();
         });
 
+        // Width control
         document.getElementById('width').addEventListener('input', (e) => {
-            document.getElementById('width-value').textContent = e.target.value + 'mm';
+            const value = e.target.value;
+            document.getElementById('width-value').textContent = value + 'mm';
+            document.getElementById('width-input').value = value;
+            debouncedUpdate();
+        });
+        document.getElementById('width-input').addEventListener('input', (e) => {
+            const value = Math.min(Math.max(e.target.value, 30), 100);
+            e.target.value = value;
+            document.getElementById('width').value = value;
+            document.getElementById('width-value').textContent = value + 'mm';
             debouncedUpdate();
         });
 
+        // Thickness control
         document.getElementById('thickness').addEventListener('input', (e) => {
-            document.getElementById('thickness-value').textContent = e.target.value + 'mm';
+            const value = e.target.value;
+            document.getElementById('thickness-value').textContent = value + 'mm';
+            document.getElementById('thickness-input').value = value;
+            debouncedUpdate();
+        });
+        document.getElementById('thickness-input').addEventListener('input', (e) => {
+            const value = Math.min(Math.max(e.target.value, 3), 12);
+            e.target.value = value;
+            document.getElementById('thickness').value = value;
+            document.getElementById('thickness-value').textContent = value + 'mm';
             debouncedUpdate();
         });
 
+        // Edge Thickness control
         document.getElementById('edge-thickness').addEventListener('input', (e) => {
-            document.getElementById('edge-thickness-value').textContent = e.target.value + 'mm';
+            const value = e.target.value;
+            document.getElementById('edge-thickness-value').textContent = value + 'mm';
+            document.getElementById('edge-thickness-input').value = value;
+            debouncedUpdate();
+        });
+        document.getElementById('edge-thickness-input').addEventListener('input', (e) => {
+            const value = Math.min(Math.max(e.target.value, 0.5), 12);
+            e.target.value = value;
+            document.getElementById('edge-thickness').value = value;
+            document.getElementById('edge-thickness-value').textContent = value + 'mm';
             debouncedUpdate();
         });
 
         document.getElementById('edge-thickness-apply').addEventListener('change', debouncedUpdate);
 
+        // Edge Angle control
         document.getElementById('edge-angle').addEventListener('input', (e) => {
-            document.getElementById('angle-value').textContent = e.target.value + '°';
+            const value = e.target.value;
+            document.getElementById('angle-value').textContent = value + '°';
+            document.getElementById('edge-angle-input').value = value;
+            debouncedUpdate();
+        });
+        document.getElementById('edge-angle-input').addEventListener('input', (e) => {
+            const value = Math.min(Math.max(e.target.value, 0), 90);
+            e.target.value = value;
+            document.getElementById('edge-angle').value = value;
+            document.getElementById('angle-value').textContent = value + '°';
             debouncedUpdate();
         });
 
+        // Edge Depth control
         document.getElementById('edge-depth').addEventListener('input', (e) => {
-            document.getElementById('edge-depth-value').textContent = e.target.value + 'mm';
+            const value = e.target.value;
+            document.getElementById('edge-depth-value').textContent = value + 'mm';
+            document.getElementById('edge-depth-input').value = value;
+            debouncedUpdate();
+        });
+        document.getElementById('edge-depth-input').addEventListener('input', (e) => {
+            const value = Math.min(Math.max(e.target.value, 3), 30);
+            e.target.value = value;
+            document.getElementById('edge-depth').value = value;
+            document.getElementById('edge-depth-value').textContent = value + 'mm';
             debouncedUpdate();
         });
 
