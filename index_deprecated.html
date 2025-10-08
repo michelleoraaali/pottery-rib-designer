@@ -545,23 +545,12 @@
             color: var(--primary-blue);
             margin-bottom: 0.5rem;
         }
-
-        .pattern-zone-overlay {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            background: rgba(244, 196, 48, 0.2);
-            border-right: 3px dashed var(--primary-red);
-            pointer-events: none;
-            z-index: 1;
-        }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="container">
-            <h1>🏺 Pottery Rib Customizer</h1>
+            <h1>Pottery Rib Customizer</h1>
         </div>
     </div>
 
@@ -683,7 +672,7 @@
                         </select>
                         <div class="info-text" id="custom-shape-info" style="display: none;">
                             <button class="btn btn-sm btn-primary" onclick="openDrawingModal()">
-                                <i class="fas fa-pencil-alt"></i> Open Drawing Canvas
+                                Open Drawing Canvas
                             </button>
                         </div>
                     </div>
@@ -841,14 +830,14 @@
                     <div class="d-grid gap-2 mt-4">
                         <div class="dropdown">
                             <button class="btn btn-primary dropdown-toggle w-100" type="button" id="downloadDropdown" data-bs-toggle="dropdown">
-                                <i class="fas fa-download"></i> Download Your Rib!
+                                Download Your Rib!
                             </button>
                             <ul class="dropdown-menu w-100">
                                 <li><a class="dropdown-item" href="#" onclick="exportSTL(); return false;">
-                                    <i class="fas fa-cube"></i> Download as STL
+                                    Download as STL
                                 </a></li>
                                 <li><a class="dropdown-item" href="#" onclick="exportOBJ(); return false;">
-                                    <i class="fas fa-box"></i> Download as OBJ
+                                    Download as OBJ
                                 </a></li>
                             </ul>
                         </div>
@@ -857,7 +846,7 @@
                     <!-- 3D Printing Tips Section -->
                     <div class="collapsible-section mt-3">
                         <div class="collapsible-header" onclick="toggleSection('printing-tips')">
-                            <span>💡 3D Printing Tips <i class="fas fa-chevron-down" id="printing-tips-icon"></i></span>
+                            <span>3D Printing Tips <i class="fas fa-chevron-down" id="printing-tips-icon"></i></span>
                         </div>
                         <div class="collapsible-content" id="printing-tips-content">
                             <div style="padding: 1rem; background: #f8f9fa; border-radius: 10px;">
@@ -895,10 +884,10 @@
                         <h5 class="mb-0">3D Preview</h5>
                         <div>
                             <button class="btn btn-sm btn-outline-secondary" onclick="toggleGrid()">
-                                <i class="fas fa-th"></i> Grid
+                                Grid
                             </button>
                             <button class="btn btn-sm btn-outline-secondary" onclick="resetCamera()">
-                                <i class="fas fa-sync-alt"></i> Reset View
+                                Reset View
                             </button>
                         </div>
                     </div>
@@ -935,7 +924,7 @@
                     <!-- Stats Panel -->
                     <div class="stats-panel">
                         <h6 class="text-center mb-2" style="color: var(--primary-blue); font-weight: 800;">
-                            📊 Design Statistics
+                            Design Statistics
                         </h6>
                         <div class="stats-grid">
                             <div class="stat-item">
@@ -969,103 +958,39 @@
     <!-- Drawing Modal -->
     <div id="drawing-modal" class="modal-custom">
         <div class="modal-container">
-            <h5 class="mb-3"><i class="fas fa-paint-brush"></i> Draw Your Custom Shaping Edge</h5>
+            <h5 class="mb-3">Draw Your Custom Shaping Edge</h5>
+            <p class="text-muted">Draw a smooth curve from left to right. This defines your rib's top edge shape.</p>
             
-            <!-- Instructions Panel -->
-            <div style="background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; border: 2px solid var(--primary-blue);">
-                <h6 style="color: var(--primary-blue); font-weight: 700; margin-bottom: 0.5rem;">
-                    <i class="fas fa-info-circle"></i> How to Use This Tool
-                </h6>
-                <p style="margin-bottom: 0.5rem; font-size: 0.9rem;" id="drawing-instructions">
-                    <strong>Freehand Mode:</strong> Click and drag to draw your custom edge shape from left to right. This curve will define the top edge of your pottery rib.
-                </p>
-                <p style="margin-bottom: 0; font-size: 0.85rem; color: #666;">
-                    <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> The horizontal center line represents the middle of your rib. Draw above for convex curves, below for concave curves.
-                </p>
-            </div>
-
-            <!-- Drawing Mode Selection -->
-            <div class="mb-3">
-                <label style="font-weight: 700; color: var(--primary-blue); margin-bottom: 0.5rem;">
-                    <i class="fas fa-pen"></i> Drawing Mode
-                </label>
-                <select class="form-select" id="drawing-mode" onchange="onDrawingModeChange()">
-                    <option value="freehand">Freehand - Draw organically with your cursor</option>
-                    <option value="straight">Straight Lines - Click points to connect</option>
-                    <option value="pattern">Pattern Repeat - Draw once, repeat across</option>
-                </select>
-            </div>
-
-            <!-- Pattern Repeat Controls (hidden by default) -->
-            <div id="pattern-controls" style="display: none; margin-bottom: 1rem;">
-                <label style="font-weight: 700; color: var(--primary-blue);">
-                    Number of Repeats <span class="value-display" id="pattern-repeats-value">3</span>
-                </label>
-                <div class="input-with-slider">
-                    <input type="number" id="pattern-repeats-input" min="2" max="10" value="3" step="1" onchange="updatePatternRepeats()">
-                    <input type="range" class="form-range" id="pattern-repeats" min="2" max="10" value="3" step="1" oninput="updatePatternRepeats()">
-                </div>
-                <div style="margin-top: 0.5rem; padding: 0.5rem; background: #fff3cd; border-radius: 5px; font-size: 0.85rem;">
-                    <i class="fas fa-arrow-right"></i> Draw your pattern in the <strong>highlighted section</strong> on the left. It will repeat <span id="repeat-count-text">3</span> times across the width.
-                </div>
-            </div>
-
-            <!-- Straight Line Mode Info (hidden by default) -->
-            <div id="straight-line-info" style="display: none; margin-bottom: 1rem; padding: 0.75rem; background: #d1ecf1; border-radius: 5px; font-size: 0.85rem; border: 2px solid #0066cc;">
-                <i class="fas fa-mouse-pointer"></i> <strong>Click</strong> to place points. Lines will connect automatically. <strong>Double-click</strong> or press <strong>Finish Line</strong> to complete.
-            </div>
-
-            <!-- Smoothing Control -->
-            <div class="mb-3">
-                <label style="font-weight: 700; color: var(--primary-blue);">
-                    <i class="fas fa-wave-square"></i> Smoothing Amount <span class="value-display" id="smoothing-value">50%</span>
-                </label>
-                <input type="range" class="form-range" id="smoothing-amount" min="0" max="100" value="50" step="5" oninput="updateSmoothingValue()">
-                <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
-                    Lower = follows your drawing exactly • Higher = creates smoother curves
-                </div>
-                <div style="margin-top: 0.5rem;">
-                    <label>
-                        <input type="checkbox" id="show-smoothing-preview" checked style="margin-right: 0.5rem;" onchange="toggleSmoothingPreview()">
-                        Show live smoothing preview
-                    </label>
-                </div>
-            </div>
-
-            <!-- Guides -->
             <div class="mb-3">
                 <label>
-                    <input type="checkbox" id="symmetry-guide" checked style="margin-right: 0.5rem;" onchange="redrawCanvas()">
-                    Show Center Guide Line
+                    Smoothing Amount <span class="value-display" id="smoothing-value">50%</span>
+                </label>
+                <input type="range" class="form-range" id="smoothing-amount" min="0" max="100" value="50" step="5">
+            </div>
+
+            <div class="mb-2">
+                <label>
+                    <input type="checkbox" id="symmetry-guide" checked style="margin-right: 0.5rem;">
+                    Show Symmetry Guide
                 </label>
             </div>
 
-            <!-- Canvas -->
-            <div style="position: relative;">
-                <canvas id="drawing-canvas" width="500" height="300"></canvas>
-                <div id="pattern-zone" class="pattern-zone-overlay" style="display: none;"></div>
-            </div>
+            <canvas id="drawing-canvas" width="500" height="300"></canvas>
             
-            <!-- Action Buttons -->
             <div class="d-grid gap-2 mt-3">
-                <!-- Finish Line button (only for straight line mode) -->
-                <button class="btn btn-primary" id="finish-line-btn" onclick="finishStraightLine()" style="display: none;">
-                    <i class="fas fa-check"></i> Finish Line
-                </button>
-                
                 <button class="btn btn-primary" onclick="applyCustomCurve()">
-                    <i class="fas fa-check-circle"></i> Apply Shape to Rib
+                    Apply Shape
                 </button>
                 <div class="action-buttons">
                     <button class="btn btn-outline-secondary" onclick="undoDrawing()">
-                        <i class="fas fa-undo"></i> Undo
+                        Undo
                     </button>
                     <button class="btn btn-outline-secondary" onclick="clearDrawing()">
-                        <i class="fas fa-eraser"></i> Clear
+                        Clear
                     </button>
                 </div>
                 <button class="btn btn-outline-secondary" onclick="closeDrawingModal()">
-                    <i class="fas fa-times"></i> Cancel
+                    Cancel
                 </button>
             </div>
         </div>
@@ -1083,9 +1008,6 @@
         let updateTimeout = null;
         let currentView = '3d';
         let showGrid = false;
-        let drawingMode = 'freehand';
-        let straightLinePoints = [];
-        let patternRepeats = 3;
 
         // ===== INITIALIZATION =====
         function initScene() {
@@ -1695,335 +1617,56 @@
             ctx.fillStyle = '#0066cc';
             ctx.font = 'bold 14px Nunito';
             ctx.textAlign = 'center';
-            
-            if (drawingMode === 'pattern') {
-                ctx.fillText('← Draw pattern in this section', drawingCanvas.width / (patternRepeats * 2), 20);
-            } else {
-                ctx.fillText('Draw from left to right', drawingCanvas.width / 2, 20);
-            }
-        }
-
-        function updatePatternZone() {
-            const patternZone = document.getElementById('pattern-zone');
-            if (drawingMode === 'pattern') {
-                const zoneWidth = drawingCanvas.width / patternRepeats;
-                patternZone.style.width = zoneWidth + 'px';
-                patternZone.style.display = 'block';
-            } else {
-                patternZone.style.display = 'none';
-            }
-        }
-
-        function onDrawingModeChange() {
-            drawingMode = document.getElementById('drawing-mode').value;
-            
-            // Update instructions
-            const instructions = document.getElementById('drawing-instructions');
-            const straightLineInfo = document.getElementById('straight-line-info');
-            const patternControls = document.getElementById('pattern-controls');
-            const finishLineBtn = document.getElementById('finish-line-btn');
-            
-            switch(drawingMode) {
-                case 'freehand':
-                    instructions.innerHTML = '<strong>Freehand Mode:</strong> Click and drag to draw your custom edge shape from left to right. This curve will define the top edge of your pottery rib.';
-                    straightLineInfo.style.display = 'none';
-                    patternControls.style.display = 'none';
-                    finishLineBtn.style.display = 'none';
-                    break;
-                case 'straight':
-                    instructions.innerHTML = '<strong>Straight Lines Mode:</strong> Click to place points on the canvas. Lines will automatically connect between points. Double-click or press "Finish Line" when complete.';
-                    straightLineInfo.style.display = 'block';
-                    patternControls.style.display = 'none';
-                    finishLineBtn.style.display = 'block';
-                    break;
-                case 'pattern':
-                    instructions.innerHTML = '<strong>Pattern Repeat Mode:</strong> Draw a small pattern in the highlighted section. Your pattern will automatically repeat across the entire width of the rib.';
-                    straightLineInfo.style.display = 'none';
-                    patternControls.style.display = 'block';
-                    finishLineBtn.style.display = 'none';
-                    break;
-            }
-            
-            clearDrawing();
-            updatePatternZone();
-        }
-
-        function updatePatternRepeats() {
-            patternRepeats = parseInt(document.getElementById('pattern-repeats').value);
-            document.getElementById('pattern-repeats-value').textContent = patternRepeats;
-            document.getElementById('pattern-repeats-input').value = patternRepeats;
-            document.getElementById('repeat-count-text').textContent = patternRepeats;
-            updatePatternZone();
-            redrawCanvas();
-        }
-
-        function toggleSmoothingPreview() {
-            const showPreview = document.getElementById('show-smoothing-preview').checked;
-            if (showPreview && customCurvePoints.length > 0) {
-                drawSmoothingPreview();
-            } else {
-                redrawCanvas();
-            }
-        }
-
-        function drawSmoothingPreview() {
-            if (customCurvePoints.length < 3) return;
-            if (drawingMode !== 'freehand' && drawingMode !== 'pattern') return;
-            
-            const smoothingFactor = parseInt(document.getElementById('smoothing-amount').value);
-            
-            // First redraw the original line
-            redrawCanvas();
-            
-            // Then draw the smoothed preview on top
-            const smoothedPoints = smoothCurvePoints(customCurvePoints, smoothingFactor);
-            
-            if (smoothedPoints.length < 2) return;
-            
-            // Draw smoothed preview in a different color
-            ctx.strokeStyle = '#3399ff'; // Bright blue for preview
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.setLineDash([5, 5]); // Dashed line for preview
-            
-            ctx.beginPath();
-            ctx.moveTo(
-                smoothedPoints[0].x * drawingCanvas.width,
-                smoothedPoints[0].y * drawingCanvas.height
-            );
-            
-            for (let i = 1; i < smoothedPoints.length; i++) {
-                ctx.lineTo(
-                    smoothedPoints[i].x * drawingCanvas.width,
-                    smoothedPoints[i].y * drawingCanvas.height
-                );
-            }
-            ctx.stroke();
-            ctx.setLineDash([]); // Reset dash
-            
-            // Add a legend
-            ctx.fillStyle = '#d63447';
-            ctx.font = 'bold 12px Nunito';
-            ctx.textAlign = 'right';
-            ctx.fillText('● Your Drawing', drawingCanvas.width - 10, drawingCanvas.height - 30);
-            ctx.fillStyle = '#3399ff';
-            ctx.fillText('- - Smoothed Preview', drawingCanvas.width - 10, drawingCanvas.height - 15);
-        }
-
-        function updateSmoothingValue() {
-            const value = document.getElementById('smoothing-amount').value;
-            document.getElementById('smoothing-value').textContent = value + '%';
-            
-            // Update smoothing preview if enabled
-            if (document.getElementById('show-smoothing-preview')?.checked && customCurvePoints.length > 0) {
-                drawSmoothingPreview();
-            }
+            ctx.fillText('Draw from left to right', drawingCanvas.width / 2, 20);
         }
 
         function openDrawingModal() {
             document.getElementById('drawing-modal').classList.add('show');
-            clearDrawing();
             drawGrid();
-            updatePatternZone();
         }
 
-        // ===== FREEHAND MODE =====
         drawingCanvas.addEventListener('mousedown', (e) => {
-            if (drawingMode === 'freehand') {
-                isDrawing = true;
-                drawingHistory = [...customCurvePoints];
-                const rect = drawingCanvas.getBoundingClientRect();
-                const x = (e.clientX - rect.left) / drawingCanvas.width;
-                const y = (e.clientY - rect.top) / drawingCanvas.height;
-                customCurvePoints.push({ x, y });
-            } else if (drawingMode === 'straight') {
-                handleStraightLineClick(e);
-            } else if (drawingMode === 'pattern') {
-                isDrawing = true;
-                drawingHistory = [...customCurvePoints];
-                const rect = drawingCanvas.getBoundingClientRect();
-                const x = (e.clientX - rect.left) / drawingCanvas.width;
-                const y = (e.clientY - rect.top) / drawingCanvas.height;
-                // Only allow drawing in the pattern zone
-                const patternZoneEnd = 1 / patternRepeats;
-                if (x <= patternZoneEnd) {
-                    customCurvePoints.push({ x, y });
-                }
-            }
+            isDrawing = true;
+            drawingHistory = [...customCurvePoints];
+            const rect = drawingCanvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / drawingCanvas.width;
+            const y = (e.clientY - rect.top) / drawingCanvas.height;
+            customCurvePoints.push({ x, y });
         });
 
         drawingCanvas.addEventListener('mousemove', (e) => {
-            if (drawingMode === 'freehand' && isDrawing) {
-                const rect = drawingCanvas.getBoundingClientRect();
-                const x = (e.clientX - rect.left) / drawingCanvas.width;
-                const y = (e.clientY - rect.top) / drawingCanvas.height;
-                
-                customCurvePoints.push({ x, y });
-                
-                if (customCurvePoints.length > 1) {
-                    const prevPoint = customCurvePoints[customCurvePoints.length - 2];
-                    const currPoint = customCurvePoints[customCurvePoints.length - 1];
-                    
-                    ctx.strokeStyle = '#d63447';
-                    ctx.lineWidth = 4;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.beginPath();
-                    ctx.moveTo(prevPoint.x * drawingCanvas.width, prevPoint.y * drawingCanvas.height);
-                    ctx.lineTo(currPoint.x * drawingCanvas.width, currPoint.y * drawingCanvas.height);
-                    ctx.stroke();
-                }
-            } else if (drawingMode === 'pattern' && isDrawing) {
-                const rect = drawingCanvas.getBoundingClientRect();
-                const x = (e.clientX - rect.left) / drawingCanvas.width;
-                const y = (e.clientY - rect.top) / drawingCanvas.height;
-                
-                const patternZoneEnd = 1 / patternRepeats;
-                if (x <= patternZoneEnd) {
-                    customCurvePoints.push({ x, y });
-                    
-                    if (customCurvePoints.length > 1) {
-                        const prevPoint = customCurvePoints[customCurvePoints.length - 2];
-                        const currPoint = customCurvePoints[customCurvePoints.length - 1];
-                        
-                        ctx.strokeStyle = '#d63447';
-                        ctx.lineWidth = 4;
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.beginPath();
-                        ctx.moveTo(prevPoint.x * drawingCanvas.width, prevPoint.y * drawingCanvas.height);
-                        ctx.lineTo(currPoint.x * drawingCanvas.width, currPoint.y * drawingCanvas.height);
-                        ctx.stroke();
-                    }
-                }
-            }
-        });
-
-        drawingCanvas.addEventListener('mouseup', () => {
-            if (drawingMode === 'freehand' || drawingMode === 'pattern') {
-                isDrawing = false;
-                
-                // If pattern mode, automatically generate the repeated pattern
-                if (drawingMode === 'pattern' && customCurvePoints.length > 0) {
-                    generateRepeatingPattern();
-                }
-                
-                // Show smoothing preview if enabled
-                if (document.getElementById('show-smoothing-preview')?.checked && customCurvePoints.length > 0) {
-                    setTimeout(() => drawSmoothingPreview(), 50);
-                }
-            }
-        });
-
-        // ===== STRAIGHT LINE MODE =====
-        function handleStraightLineClick(e) {
+            if (!isDrawing) return;
+            
             const rect = drawingCanvas.getBoundingClientRect();
             const x = (e.clientX - rect.left) / drawingCanvas.width;
             const y = (e.clientY - rect.top) / drawingCanvas.height;
             
-            straightLinePoints.push({ x, y });
+            customCurvePoints.push({ x, y });
             
-            // Draw the point
-            ctx.fillStyle = '#d63447';
-            ctx.beginPath();
-            ctx.arc(x * drawingCanvas.width, y * drawingCanvas.height, 5, 0, 2 * Math.PI);
-            ctx.fill();
-            
-            // Draw line if there's a previous point
-            if (straightLinePoints.length > 1) {
-                const prevPoint = straightLinePoints[straightLinePoints.length - 2];
+            if (customCurvePoints.length > 1) {
+                const prevPoint = customCurvePoints[customCurvePoints.length - 2];
+                const currPoint = customCurvePoints[customCurvePoints.length - 1];
+                
                 ctx.strokeStyle = '#d63447';
                 ctx.lineWidth = 4;
                 ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
                 ctx.beginPath();
                 ctx.moveTo(prevPoint.x * drawingCanvas.width, prevPoint.y * drawingCanvas.height);
-                ctx.lineTo(x * drawingCanvas.width, y * drawingCanvas.height);
+                ctx.lineTo(currPoint.x * drawingCanvas.width, currPoint.y * drawingCanvas.height);
                 ctx.stroke();
-            }
-        }
-
-        drawingCanvas.addEventListener('dblclick', () => {
-            if (drawingMode === 'straight') {
-                finishStraightLine();
             }
         });
 
-        function finishStraightLine() {
-            if (straightLinePoints.length < 2) {
-                showToast('Please place at least 2 points', true);
-                return;
-            }
-            
-            // Convert straight line points to dense curve points for smooth processing
-            customCurvePoints = [];
-            for (let i = 0; i < straightLinePoints.length - 1; i++) {
-                const p1 = straightLinePoints[i];
-                const p2 = straightLinePoints[i + 1];
-                const segments = 20;
-                
-                for (let j = 0; j < segments; j++) {
-                    const t = j / segments;
-                    customCurvePoints.push({
-                        x: p1.x + (p2.x - p1.x) * t,
-                        y: p1.y + (p2.y - p1.y) * t
-                    });
-                }
-            }
-            // Add the last point
-            customCurvePoints.push(straightLinePoints[straightLinePoints.length - 1]);
-            
-            straightLinePoints = [];
-            showToast('Line completed! You can now apply it or continue editing.');
-        }
+        drawingCanvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
 
-        // ===== PATTERN REPEAT MODE =====
-        function generateRepeatingPattern() {
-            if (customCurvePoints.length === 0) return;
-            
-            // Get the pattern zone
-            const patternZoneEnd = 1 / patternRepeats;
-            
-            // Filter only points in the pattern zone and normalize them
-            let patternPoints = customCurvePoints.filter(p => p.x <= patternZoneEnd);
-            if (patternPoints.length === 0) return;
-            
-            // Normalize pattern points to 0-1 range within the pattern zone
-            const normalizedPattern = patternPoints.map(p => ({
-                x: p.x / patternZoneEnd,
-                y: p.y
-            }));
-            
-            // Generate repeated pattern
-            customCurvePoints = [];
-            for (let repeat = 0; repeat < patternRepeats; repeat++) {
-                const offset = repeat / patternRepeats;
-                const scale = 1 / patternRepeats;
-                
-                normalizedPattern.forEach(p => {
-                    customCurvePoints.push({
-                        x: offset + (p.x * scale),
-                        y: p.y
-                    });
-                });
-            }
-            
-            // Redraw with the repeated pattern
-            redrawCanvas();
-        }
-
-        function redrawCanvas() {
+        document.getElementById('symmetry-guide').addEventListener('change', () => {
             ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
             drawGrid();
             redrawCustomCurve();
-            
-            // Show smoothing preview if enabled and we have points
-            if (document.getElementById('show-smoothing-preview')?.checked && 
-                customCurvePoints.length > 2 && 
-                (drawingMode === 'freehand' || drawingMode === 'pattern')) {
-                setTimeout(() => drawSmoothingPreview(), 10);
-            }
-        }
+        });
 
         function redrawCustomCurve() {
             if (customCurvePoints.length < 2) return;
@@ -2045,16 +1688,6 @@
                 );
             }
             ctx.stroke();
-            
-            // Draw points for straight line mode
-            if (drawingMode === 'straight' && straightLinePoints.length > 0) {
-                ctx.fillStyle = '#d63447';
-                straightLinePoints.forEach(p => {
-                    ctx.beginPath();
-                    ctx.arc(p.x * drawingCanvas.width, p.y * drawingCanvas.height, 5, 0, 2 * Math.PI);
-                    ctx.fill();
-                });
-            }
         }
 
         function clearDrawing() {
@@ -2062,31 +1695,24 @@
             drawGrid();
             customCurvePoints = [];
             drawingHistory = [];
-            straightLinePoints = [];
-            // No need to show preview since there are no points
         }
 
         function undoDrawing() {
             if (drawingHistory.length > 0) {
                 customCurvePoints = [...drawingHistory];
-                redrawCanvas();
-            } else if (straightLinePoints.length > 0) {
-                straightLinePoints.pop();
-                redrawCanvas();
+                ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                drawGrid();
+                redrawCustomCurve();
             }
         }
 
         function applyCustomCurve() {
-            if (drawingMode === 'straight' && straightLinePoints.length >= 2) {
-                finishStraightLine();
-            }
-            
             if (customCurvePoints.length > 5) {
                 updateRib();
                 closeDrawingModal();
-                showToast('Custom shape applied successfully! 🎨');
+                showToast('Custom shape applied successfully');
             } else {
-                showToast('Please draw a longer curve (minimum 5 points required)', true);
+                showToast('Please draw a longer curve (draw from left to right across the canvas)', true);
             }
         }
 
@@ -2138,7 +1764,7 @@
                 }
             });
             
-            showToast('✓ Preset applied: ' + preset.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+            showToast('Preset applied: ' + preset.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
             updateRib();
         }
 
@@ -2184,7 +1810,7 @@
             document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
             
-            showToast('✓ STL file downloaded successfully! 🎉');
+            showToast('STL file downloaded successfully');
         }
 
         function exportOBJ() {
@@ -2214,7 +1840,7 @@
             document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
             
-            showToast('✓ OBJ file downloaded successfully! 🎉');
+            showToast('OBJ file downloaded successfully');
         }
 
         // ===== UI HELPERS =====
@@ -2257,11 +1883,11 @@
                     ctx.stroke();
                 }
                 
-                showToast('✓ Grid overlay enabled');
+                showToast('Grid overlay enabled');
             } else {
                 const ctx = gridCanvas.getContext('2d');
                 ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-                showToast('✓ Grid overlay disabled');
+                showToast('Grid overlay disabled');
             }
         }
 
@@ -2299,9 +1925,7 @@
                         updateThicknessSuggestions();
                     }
                     
-                    if (id !== 'smoothing-amount') {
-                        debouncedUpdate();
-                    }
+                    debouncedUpdate();
                 });
             }
             
@@ -2319,9 +1943,7 @@
                         updateThicknessSuggestions();
                     }
                     
-                    if (id !== 'smoothing-amount') {
-                        debouncedUpdate();
-                    }
+                    debouncedUpdate();
                 });
             }
         });
